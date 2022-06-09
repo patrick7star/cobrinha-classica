@@ -1,6 +1,6 @@
 extern crate rand;
 // caminho é basicamente(.. == crate).
-use super::objetos_modelos::*;
+use crate::Ponto;
 
 
 pub fn pontos_aleatorios(max_linhas:u8, 

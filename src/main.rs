@@ -2,10 +2,8 @@
 extern crate ncurses;
 use ncurses::*;
 extern crate rand;
-
 // biblioteca do Rust:
 use std::time::Instant;
-
 // importando da minha biblioteca:
 use cobrinha_classica::*;
 
@@ -100,9 +98,17 @@ fn roda_jogo(obj:&mut Cobrinha, obj_metas:&mut Alvos) -> Dados {
       obj, obj_metas,
       (linhas as u16, colunas as u16)
    );
+   let limite = (
+      Ponto { y:1, x:1 },
+      Ponto { 
+         y:(linhas-1) as u8, 
+         x:(colunas-1) as u8
+      }
+   );
+   let mut controlador = Dilutor::instancia(limite);
 
    // apresentação ao iniciar o jogo.
-   plota_cobrinha(&obj);
+   plota_cobrinha(obj);
    introducao();
    
    // enquanto todos alvos/bichos não se forem...
@@ -123,17 +129,17 @@ fn roda_jogo(obj:&mut Cobrinha, obj_metas:&mut Alvos) -> Dados {
          if obj.sentido() != Direcao::Leste.oposto()
             { dir = Direcao::Leste; }
          else
-            { dir = obj.cabeca.sentido; }
+            { dir = obj.sentido(); }
       } else if pressionado == KEY_UP {
          if obj.sentido() != Direcao::Norte.oposto()
             { dir = Direcao::Norte; }
          else
-            { dir = obj.cabeca.sentido; }
+            { dir = obj.sentido(); }
       } else if pressionado == KEY_DOWN {
          if obj.sentido() != Direcao::Sul.oposto()
             { dir = Direcao::Sul; }
          else
-            { dir = obj.cabeca.sentido; }
+            { dir = obj.sentido(); }
       } else {
          // sai do programa quebrando o loop.
          if pressionado == 's' as i32
@@ -147,7 +153,7 @@ fn roda_jogo(obj:&mut Cobrinha, obj_metas:&mut Alvos) -> Dados {
             refresh();
          }
          // direção atual.
-         dir = obj.cabeca.sentido;
+         dir = obj.sentido();
       }
       
       // move a cobrinha.
@@ -158,11 +164,14 @@ fn roda_jogo(obj:&mut Cobrinha, obj_metas:&mut Alvos) -> Dados {
       let devorou = obj_metas.captura_valido(obj.posicao());
       // se capturou algo, crescer a cobrinha em dois membros.
       if devorou { 
-         // duas novos membros para cada bichinho devorado.
-         *obj += 5;
+         // coloca na "fila de incremento".
+         controlador += 5;
          // sinal de captura.
          beep();
       }
+      // verifica se pode incrementar de um-em-um.
+      if controlador.pode_aumentar(obj) 
+         { *obj += 1 }; 
       // mostra bichos/locais restantes.
       plota_metas_melhorado(obj_metas);
       // barra de status com informações importantes.
@@ -209,10 +218,8 @@ fn roda_jogo(obj:&mut Cobrinha, obj_metas:&mut Alvos) -> Dados {
 }
 
 // aumenta a cobrinha dado a área de jogo.
-fn cobrinha_proporcional(
-cobra:&mut Cobrinha, 
-dimensao:(i32, i32)
-) {
+fn cobrinha_proporcional( cobra:&mut Cobrinha, dimensao:(i32, i32))
+{
    let lins = dimensao.0 - 2;
    let cols = dimensao.1 - 2;
    // complementando baseado na área.
@@ -589,3 +596,4 @@ fn conserta_borda() {
       refresh();
    }
 }
+
