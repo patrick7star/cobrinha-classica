@@ -123,14 +123,14 @@ impl Display for Dados {
          \rresultado: {}
          \rdimensão: {}x{}
          \rcaptura: {}/min
-         \rduração: {:#?}
+         \rduração: {}
          \rpassos dados: {}
          \rbugs devorados:{}
          \raumento: {}\n", 
          traduz(self.vitoria),
          self.dimensao.0, self.dimensao.1,
          self.taxa_captura,
-         self.tempo_duracao.unwrap(),
+         tempo_legivel(self.tempo_duracao.unwrap()),
          self.fila_rastros.len(),
          qtd_devorados,
          cf - self.comprimento
@@ -382,4 +382,18 @@ impl Dados {
          cronometro: None,
       };
    }
+}
+
+// pega o tempo em segundos e transforma
+// numa legitíma string, informando o 
+// tempo de forma legível. O range aqui
+// não é muito amplos, pois o jogo sempre
+// gera algo nestes intervalo(minutos e 
+// segundos).
+fn tempo_legivel(t:Duration) -> String {
+   let tempo = t.as_secs_f32();
+   if tempo > 60.0 
+      { format!("{:0.1} min", tempo / 60.0) }
+   else
+      { format!("{} seg", tempo as u8) }
 }
