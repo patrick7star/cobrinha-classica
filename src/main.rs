@@ -23,7 +23,7 @@ fn plota_metas_melhorado(meta:&Alvos) {
 }
 
 // desenha na tela a cobrinha.
-fn plota_cobrinha(obj:&Cobrinha) {
+pub fn plota_cobrinha(obj:&Cobrinha) {
    // pinta a cabeça da cobrinha.
    wmove(stdscr(), 
       obj.cabeca.posicao.y as i32,
@@ -112,7 +112,7 @@ fn roda_jogo(obj:&mut Cobrinha, obj_metas:&mut Alvos) -> Dados {
    introducao();
    
    // enquanto todos alvos/bichos não se forem...
-   while !obj_metas.sem_alvos() && !colidiu(obj) {
+   while !obj_metas.sem_alvos() && !colidiu(obj, linhas, colunas) {
       // colhendo dados antes do próximo movimento.
       metadados.atualiza(obj, obj_metas);
 
@@ -186,47 +186,13 @@ fn roda_jogo(obj:&mut Cobrinha, obj_metas:&mut Alvos) -> Dados {
 
    /* colisão, apenas abandona o jogo imediamente,
     * sem rodar a animação. */
-   if colidiu(obj) { return metadados; }
+   if colidiu(obj, linhas, colunas) 
+      { return metadados; }
 
-   // animando por um tempo após ter ganho o jogo.
-   // continuar com a cobrinha por 1 seg e meio.
-   let tempo = Instant::now();
-   /* última atualizada, pois o último bichinho 
-    * não será pintado corretamente. */
-   //atualiza(obj, &molde);
-   while tempo.elapsed().as_secs() <= 60 { 
-      // saída de emergência.
-      if getch() as u32 == 's' as u32
-         { break; }
-
-      // obtem sentido do próximo passo.
-      let nova_dir = cobrinha_piloto_automatico(obj, linhas, colunas);
-
-      /* visualizando e movimento cobrinha. O
-       * básico: apenas ela e a barra de status. */
-      obj.mover(nova_dir);
-      plota_cobrinha(&obj);
-      plota_metas_melhorado(obj_metas);
-      if visualiza_status 
-         { barra_status_flutuante(obj, obj_metas, &mut ja_apagada); }
-
-      refresh();
-      napms(VELOCIDADE); 
-   }
+   // animação de termino.
+   animacao_final(obj, obj_metas, linhas, colunas, 60);
 
    return metadados;
-}
-
-// aumenta a cobrinha dado a área de jogo.
-fn cobrinha_proporcional( cobra:&mut Cobrinha, dimensao:(i32, i32))
-{
-   let lins = dimensao.0 - 2;
-   let cols = dimensao.1 - 2;
-   // complementando baseado na área.
-   let area_janela = (lins * cols) as f32;
-   let area_constante = 21_f32 * 15_f32;
-   let qtd_membros_restantes = 3.0 * area_janela / area_constante;
-   *cobra += qtd_membros_restantes as usize;
 }
 
 // execução de testes...
@@ -379,114 +345,34 @@ bichos:&Alvos, ja_apagada:&mut bool) {
    }
 }
 
-/* após o termino da partida, toma a cobrinha e 
- * a dirige até a borda, e faz dá várias voltas,
- * na borda, no sentido-horário.
- */
-fn cobrinha_piloto_automatico<'b>(cobra:&'b Cobrinha, 
-lin:i32, col:i32) -> Direcao {
-   // encurtando variáveis com alias.
-   let x = cobra.cabeca.posicao.x as i32;
-   let y = cobra.cabeca.posicao.y as i32;
-   let s = cobra.cabeca.sentido;
 
-   // verifica se está na borda da tela.
-   let na_borda:bool = {
-      (x == 1 && (y >= 1 && y <= lin-2)) ||
-      (x == col-2 && (y >= 1 && y <= lin-2)) ||
-      (y == 1 && (x >= 1 && x <= col-2)) ||
-      (y == col-2 && (x >= 1 && x <= col-2))
-   };
-   
-   /* closure que computa se tal ponto está fora 
-    * da borda. Basicamente, a negação do anterior
-    * para um ponto dado. */
-   let fora_da_borda = { 
-      |p:Ponto| 
-         (p.x > 1 && (p.x as i32) < col-2) &&
-         (p.y > 1 && (p.y as i32) < lin-2)
-   };
-   
-   /* neste caso, na borda; supondo que já
-    * começou no sentido-horário, que é o 
-    * planejado. */
-   if na_borda {
-      // canto-superior-esquerdo.
-      let cse = { x == 1 && y == 1 };
-      // canto-superior-direito.
-      let csd = { x == col-2 && y == 1 };
-      // canto-inferior-direito.
-      let cid = {x == col-2 && y == lin-2 };
-      // canto-inferior-esquerdo.
-      let cie = { x == 1 && y == lin-2 };
-      // tomando decisões baseado nisso.
-      if cse { Direcao::Leste }
-      else if csd { Direcao::Sul }
-      else if cid { Direcao::Oeste }
-      else if cie { Direcao::Norte }
-      // se nenhum caso, apenos o sentido anterior.
-      else { 
-         /* verifica se a posição anterior estava
-          * fora da borda. */
-         if fora_da_borda(cobra.cabeca.antiga_posicao) {
-            // caso esteja, se vinher da direita, então vai para cima.
-            if s == Direcao::Oeste
-               { Direcao::Norte }
-            // se está vindo de baixo, vai para direita.
-            else if s == Direcao::Norte
-               { Direcao::Leste }
-            // se está vindo de cima, vai para esquerda.
-            else if s == Direcao::Sul
-               { Direcao::Oeste }
-            // o último caso é  vindo da esquerda, então vai para baixo.
-            else 
-               { Direcao::Sul }
-         }
-         /* nenhum acima, possívelmente um bug em execução,
-          * não se pode fazer nada ainda no momento. Retorna
-          * rota original.  */
-         else { s }
-      }
+/* Animação de uma quantia computada de segundos
+ * em que haverá animação da cobrinha rodeando 
+ * a tela. */
+fn animacao_final(cobra:&mut Cobrinha, alvos:&mut Alvos, 
+linhas:i32, colunas:i32, duracao: u64) {
+   /* animando por um tempo após ter ganho o jogo.
+    * continuar com a cobrinha por 1 seg e meio. */
+   let mut ja_apagada = false;
+   let tempo = Instant::now();
+   /* última atualizada, pois o último bichinho 
+    * não será pintado corretamente. */
+   while tempo.elapsed().as_secs() <= duracao { 
+      // saída de emergência.
+      if getch() as u32 == 's' as u32
+         { break; }
+
+      // obtem sentido do próximo passo.
+      let nova_dir = cobrinha_piloto_automatico(cobra, linhas, colunas);
+
+      /* visualizando e movimento cobrinha. O
+       * básico: apenas ela e a barra de status. */
+      cobra.mover(nova_dir);
+      plota_cobrinha(cobra);
+      plota_metas_melhorado(alvos);
+      barra_status_flutuante(cobra, alvos, &mut ja_apagada);
+
+      refresh();
+      napms(VELOCIDADE); 
    }
-   // continue indo no mesmo sentido.
-   else { 
-      /* como não cai em nenhum caso específico anterior, então
-       * vamos detalhar ainda mais, e aplicar uma 
-       * solução simples. Como não funciona apenas para 
-       * dobrar a parede vindo do Norte, vamos dá uma 
-       * virada para este caso, para qualquer lado mais
-       * próximo, assim cai nos casos que funcionam. */
-      if s == Direcao::Sul && 
-      (y as i32) < lin-2 &&
-      x > 1 && (x as i32) < col-2
-         { Direcao::Leste }
-      else { s }
-   }
-}
-
-/* retorna se a cobrinha ultrapassou as paredes
- * da tela gerada pelo ncurses.
- */
-fn colidiu<'b>(cobra:&'b Cobrinha) -> bool {
-   // dimensão da tela:
-   let lin = getmaxy(stdscr());
-   let col = getmaxx(stdscr());
-   // alias para posição da cobrinha.
-   let y = cobra.cabeca.posicao.y as i32;
-   let x = cobra.cabeca.posicao.x as i32;
-
-   // verifica uma colisão com o próprio corpo.
-   for membro in cobra.membros.iter() {
-      let pc = cobra.posicao();
-      let pm = membro.posicao;
-      if pc == pm
-         { return true; }
-   }
-
-   // colidiu na "parede esquerda" ou no "teto".
-   if x == 0 || y == 0 
-      { return true; }
-   // intervalo permitido nas duas dimensões.
-   else 
-      { !((x >= 1 && x <= col-2) && ( y >= 1 && y <= lin-2)) }
 }
