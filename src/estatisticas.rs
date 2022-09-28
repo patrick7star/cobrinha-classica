@@ -7,11 +7,16 @@
  de tal, e etc.
 */
 
+// própria 'lib'.
 use crate::{
    Cobrinha, Ponto, 
    Direcao, Alvos, VELOCIDADE, 
-   serializacao::{Serializacao, UnicoByte}
+   serializacao::{
+      OutraSerializacao, 
+      Serializacao, 
+   }
 };
+// biblioteca padrão do Rust:
 use std::time::{Instant, Duration};
 use std::fmt::{self, Display};
 use std::primitive::bool;
@@ -21,10 +26,11 @@ use std::primitive::bool;
  * atual direção; comprimento; quantia de bugs
  * restantes; taxa de captura de bichinhos. */ 
 pub type Shot = (Ponto, Direcao, u16, u8, u8);
+type Dimensao = (u16, u16);
 
 pub struct Dados {
    // formato: altura x largura. 
-   dimensao: (u16, u16),
+   dimensao: Dimensao,
    // comprimento inicial da cobrinha.
    comprimento: u16,
    // tempo de duração do jogo.
@@ -108,7 +114,8 @@ fn traduz(resultado:bool) -> &'static str {
 }
 
 impl Display for Dados {
-   fn fmt(&self, formatador:&mut fmt::Formatter<'_>) -> fmt::Result {
+   fn fmt(&self, formatador:&mut fmt::Formatter<'_>) 
+   -> fmt::Result {
       let indice = self.fila_rastros.len() - 1;
       let qtd_devorados:u8 = {
          let qi = self.fila_rastros[indice].3;
@@ -138,107 +145,59 @@ impl Display for Dados {
    }
 }
 
-// implementando serialização do tipo 'Duration'.
-impl Serializacao for Duration {
+impl OutraSerializacao for Shot {
    fn serializa(&self) -> Vec<u8> {
-      self.as_secs()
-      .to_be_bytes()
-      .to_vec()  
-   }
-}
-
-// estruturas quebra-galhos.
-struct Boleano(bool);
-struct Duracao(Duration);
-struct Tupla(Shot);
-
-impl Duracao {
-   pub fn deserializa(bytes:[u8; 8]) -> Duration 
-      { Duration::from_secs(u64::from_be_bytes(bytes)) }
-}
-
-impl UnicoByte for Direcao {
-   fn serializa(&self) -> u8 {
-      // baseado no tipo:
-      match *self {
-         Direcao::Norte => b'N',
-         Direcao::Sul => b'S',
-         Direcao::Leste => b'L',
-         Direcao::Oeste => b'O',
-      }
-   }
-}
-
-impl Direcao {
-   // transforma mero byte na direção equivalente.
-   pub fn deserializa(byte:u8) -> Direcao {
-      if (byte as char) == 'N' 
-         { Direcao::Norte }
-      else if (byte as char) == 'S' 
-         { Direcao::Sul }
-      else if (byte as char) == 'L' 
-         { Direcao::Leste }
-      else { Direcao::Oeste }
-   }
-}
-
-impl Serializacao for Ponto {
-   // transforma o tipo de enum num byte.
-   fn serializa(&self) -> Vec<u8> {
-      // retornando dois bytes, representando cada atributo.
-      return [self.x, self.y].to_vec();
+      // acumulador de bytes.
+      let mut bytes: Vec<u8> = Vec::new();
+      // Ponto:
+      bytes.extend_from_slice(self.0.serializa().as_slice());
+      // Direção:
+      bytes.extend_from_slice(self.1.serializa().as_slice());
+      // Comprimento:
+      bytes.extend_from_slice(&self.2.to_be_bytes()[..]);
+      // Bug's devorados:
+      bytes.push(self.3);
+      // Taxa de captura média:
+      bytes.push(self.4);
+      return bytes;
    }
 
-}
-impl Ponto {
-   // 2 bytes num Ponto.
-   pub fn deserializa(bytes:[u8; 2]) -> Ponto {
-      // retorna nova instância do ponto.
-      return Ponto {
-         // convertendo para um valor 8-bits sem sinal...
-         x: bytes[0],
-         // o outro valor...
-         y: bytes[1]
-      };
-   }
-}
-
-impl UnicoByte for bool {
-   fn serializa(&self) -> u8 
-      { if *self { 1 } else { 0 } }
-}
-
-impl Boleano {
-   // um byte para bool.
-   pub fn deserializa(byte:u8) -> bool 
-      { match byte { 0 => false, _ => true } }
-}
-
-impl Serializacao for Shot {
-   fn serializa(&self) -> Vec<u8> {
-      let bytes_i = self.0.serializa();
-      let bytes_ii = self.2.to_be_bytes();
-      return [
-         bytes_i[0], bytes_i[1],
-         self.1.serializa(),
-         bytes_ii[0], bytes_ii[1],
-         self.3,
-         self.4
-      ].to_vec();
-   }
-}
-
-impl Tupla {
-   fn deserializa(bytes:[u8; 7]) -> Shot {
-      let bytes_i = [bytes[0], bytes[1]];
+   fn deserializa(bytes:&[u8]) -> Shot {
+      let array: [u8; 2] = [
+         *bytes.get(3).unwrap(), 
+         *bytes.get(4).unwrap()
+      ];
+      /*
       let bytes_ii = [bytes[3], bytes[4]];
-      (
-         Ponto::deserializa(bytes_i), 
-         Direcao::deserializa(bytes[2]),
+      ( Ponto::deserializa(&bytes[0..2]),
+         Direcao::deserializa(&bytes[2..3]),
          u16::from_be_bytes(bytes_ii),
          bytes[5],
-         bytes[6]
+         bytes[6] )
+      */
+      ( Ponto::deserializa(bytes.get(0..2).unwrap()),
+        Direcao::deserializa(bytes.get(2..3).unwrap()),
+        u16::from_be_bytes(array),
+        *bytes.get(5).unwrap(), 
+        *bytes.get(6).unwrap()
       )
+   }
+}
+
+
+impl OutraSerializacao for Dimensao {
+   fn serializa(&self) -> Vec<u8> {
+      // pega os bytes do primeiro elemento(altura).
+      let mut bytes: Vec<u8> = self.0.serializa();
+      // "concatena" o segundo neste(largura).
+      bytes.extend_from_slice(self.1.serializa().as_slice());
+      return bytes;
+   }
+   fn deserializa(bytes: &[u8]) -> Dimensao {
+      if bytes.len() != 4
+         { panic!("não têm os 4 bytes exigidos!"); }
+      ( u16::deserializa(bytes.get(0..2).unwrap()),
+        u16::deserializa(bytes.get(2..4).unwrap()) )
    }
 }
 
@@ -286,60 +245,31 @@ impl Serializacao for Dados {
       bytes.extend_from_slice(&qtd.to_be_bytes()[..]);
       bytes.extend_from_slice(fila_rastros.get(0..).unwrap());
       // só 1 byte.
-      bytes.push(vitoria);
+      //bytes.push(vitoria);
+      bytes.extend_from_slice(vitoria.as_slice());
       // 1 byte também.
       bytes.push(total_de_bugs);
       // 2 bytes.
       bytes.extend_from_slice(&velocidade[..]);
       return bytes;
    }
-}
 
-impl Dados {
-   pub fn deserializa(mut linguicao:Vec<u8>) -> Dados {
+   fn deserializa(mut linguicao:Vec<u8>) -> Dados {
       // primeiro atributo(dimensão).
-      let bytes_i:[u8; 2] = [
-         linguicao.remove(0),
-         linguicao.remove(0)
-      ];
-      let bytes_ii:[u8; 2] = [
-         linguicao.remove(0),
-         linguicao.remove(0)
-      ];
-      let dimensao = (
-         u16::from_be_bytes(bytes_i),
-         u16::from_be_bytes(bytes_ii)
-      );
+      let dimensao = Dimensao::deserializa(linguicao.drain(0..4).as_slice());
       // segundo atributo(comprimento).
-      let bytes:[u8; 2] = [
-         linguicao.remove(0),
-         linguicao.remove(0)
-      ];
-      let comprimento = u16::from_be_bytes(bytes);
+      let comprimento = u16::deserializa(linguicao.drain(0..2).as_slice());
       // terceiro atributo(taxa de duração).
-      let bytes:[u8; 8] = [
-         linguicao.remove(0),
-         linguicao.remove(0),
-         linguicao.remove(0),
-         linguicao.remove(0),
-         linguicao.remove(0),
-         linguicao.remove(0),
-         linguicao.remove(0),
-         linguicao.remove(0)
-      ];
-      let td = Duracao::deserializa(bytes);
-      let tempo_duracao = Some(td);
+      let t = Duration::deserializa(linguicao.drain(0..8).as_slice());
+      let tempo_duracao = Some(t);
       // quarto atributo(taxa de captura).
       let taxa_captura: u8 = linguicao.remove(0);
       // quinto atributo(fila de rastros).
-      let bytes:[u8; 2] = [
-         linguicao.remove(0),
-         linguicao.remove(0)
-      ];
-      let mut qtd: u16 = u16::from_be_bytes(bytes);
+      let mut qtd = u16::deserializa(linguicao.drain(0..2).as_slice());
       let mut fila_rastros: Vec<Shot> = Vec::new();
       // contabilizando remoções.
       while qtd > 0 {
+         /*
          let bytes: [u8; 7] = [
             linguicao.remove(0),
             linguicao.remove(0),
@@ -349,22 +279,18 @@ impl Dados {
             linguicao.remove(0),
             linguicao.remove(0)
          ];
-         let tupla:Shot = Tupla::deserializa(bytes);
+         */
+         let sete_bytes = linguicao.drain(0..7);
+         let tupla = Shot::deserializa(sete_bytes.as_slice());
          fila_rastros.push(tupla);
          qtd -= 1;
       }
       // sexto atributo(vitória).
-      let byte = linguicao.remove(0);
-      let vitoria = Boleano::deserializa(byte);
+      let vitoria = bool::deserializa(linguicao.drain(0..1).as_slice());
       // sétimo atributo(total de BUG's).
-      let byte = linguicao.remove(0);
-      let total_de_bugs = byte;
+      let total_de_bugs = linguicao.remove(0);
       // oitavo atributo(velocidade).
-      let bytes:[u8; 2] = [
-         linguicao.remove(0),
-         linguicao.remove(0)
-      ];
-      let velocidade = u16::from_be_bytes(bytes);
+      let velocidade = u16::deserializa(linguicao.drain(0..2).as_slice());
       // têm que está vázio.
       assert!(linguicao.is_empty());
       /* criando tipo de dados com todas seus
@@ -384,12 +310,12 @@ impl Dados {
    }
 }
 
-// pega o tempo em segundos e transforma
-// numa legitíma string, informando o 
-// tempo de forma legível. O range aqui
-// não é muito amplos, pois o jogo sempre
-// gera algo nestes intervalo(minutos e 
-// segundos).
+/* pega o tempo em segundos e transforma
+ * numa legitíma string, informando o 
+ * tempo de forma legível. O range aqui
+ * não é muito amplos, pois o jogo sempre
+ * gera algo nestes intervalo(minutos e 
+ * segundos). */
 fn tempo_legivel(t:Duration) -> String {
    let tempo = t.as_secs_f32();
    if tempo > 60.0 

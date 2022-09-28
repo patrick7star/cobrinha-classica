@@ -1,7 +1,7 @@
 
 // biblioteca padrão:
 use std::ops::AddAssign;
-use std::time::Instant;
+//use std::time::Instant;
 // próprio caixote.
 use crate::{Ponto, Direcao, Cobrinha};
 
@@ -24,7 +24,7 @@ pub struct Dilutor {
    // seus limites impostos.
    dimensao: (Ponto, Ponto),
    // auxiliares:
-   cronometro: Instant
+   //cronometro: Instant
 }
 
 // métodos complementares.
@@ -57,7 +57,7 @@ impl Dilutor {
          dimensao: d,
          pilha: Vec::new(), 
          atual:None, 
-         cronometro: Instant::now()
+         //cronometro: Instant::now()
       }
    }
 

@@ -9,7 +9,7 @@
 use std::io::{Read, Write};
 use std::fs::{OpenOptions, File};
 
-use crate::{Dados};
+use crate::{Dados, serializacao::Serializacao};
 
 type Confirmacao = Result<(), &'static str>;
 type Bytes = Result<Vec<Dados>, &'static str>;
