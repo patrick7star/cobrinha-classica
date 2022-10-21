@@ -1,17 +1,13 @@
 
 // biblioteca padrão:
 use std::ops::AddAssign;
-//use std::time::Instant;
+
 // próprio caixote.
 use crate::{Ponto, Direcao, Cobrinha};
 
-extern crate ncurses;
-use ncurses::{
-   stdscr, refresh, mv, mvinch, 
-   addstr, addch, WINDOW, getmaxx,
-   getmaxy, border, clrtoeol, A_REVERSE,
-   attroff, napms, attrset, color_set
-};
+// biblioteca externa:
+extern crate pancurses;
+use pancurses::{ Window, A_REVERSE, napms };
 
 /* Um dilutor do crescimento da Cobrinha
  * para não colidir com a parede, pelo menos
@@ -107,9 +103,9 @@ impl AddAssign<u8> for Dilutor {
 /* animação que pauso por um instante, para 
  * que se possa situar-se no jogo. A cobrinha
  * arranjada é mostrada. */
-pub fn introducao() {
+pub fn introducao(janela: &Window) {
    // dimensão da tela.
-   let colunas = getmaxx(stdscr());
+   let colunas = janela.get_max_x();
    // núcleo da mensagem.
    let mensagem = String::from("O jogo inicia em ...");
 
@@ -121,57 +117,25 @@ pub fn introducao() {
    );
 
    // escrevendo ...
-   mv(lin, col - (recuo + 5));
-   color_set(13);
-   attrset(A_REVERSE());
-   addstr(mensagem.as_str());
-   addch(' ' as u32);
+   janela.mv(lin, col - (recuo + 5));
+   janela.color_set(13);
+   janela.attrset(A_REVERSE);
+   janela.addstr(mensagem.as_str());
+   janela.addch(' ');
    // escrevendo contagem...
    for k in 0..=5 {
       // contagem está em ...
       let t = (5 - k).to_string();
-      addstr(t.as_str());
-      addch(' ' as u32);
+      janela.addstr(t.as_str());
+      janela.addch(' ');
       // tempo para próxima contagem..
       napms(700);
-      refresh();
+      janela.refresh();
    }
-   attroff(A_REVERSE());
+   janela.attroff(A_REVERSE);
    // limpa linha após mensagem colocada.
-   mv(lin, 1);
-   clrtoeol();
-}
-
-/* se alguma parte da borda estiver faltando,
- * então reconstruíla inteira.  */
-#[allow(dead_code)]
-fn conserta_borda(janela:WINDOW) {
-   // dimensão da tela.
-   let (linhas, colunas) = (
-      getmaxy(janela), 
-      getmaxx(janela)
-   );
-   let mut confirma = false;
-   let espaco_branco = ' ' as u32;
-
-   // varredura ...
-   for col in 0..=colunas-1 {
-      if mvinch(0, col) == espaco_branco 
-         { confirma = true; }
-      if mvinch(linhas-1, col) == espaco_branco 
-         { confirma = true; }
-   }
-
-   for lin in 0..=linhas-1 {
-      if mvinch(lin, 0) == espaco_branco
-         { confirma = true; }
-      if mvinch(lin, colunas-1) == espaco_branco
-         { confirma = true; }
-   }
-   if confirma { 
-      border(0, 0, 0, 0, 0, 0, 0, 0); 
-      refresh();
-   }
+   janela.mv(lin, 1);
+   janela.clrtoeol();
 }
 
 /* Encaracola cobrinha para quê não inicie

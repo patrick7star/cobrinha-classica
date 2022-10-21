@@ -95,7 +95,7 @@ pub fn cobrinha_proporcional(cobra:&mut Cobrinha, dimensao:(i32, i32))
  * a dirige até a borda, e faz dá várias voltas,
  * na borda, no sentido-horário.
  */
-pub fn cobrinha_piloto_automatico<'b>(cobra:&'b Cobrinha, 
+pub fn piloto_automatico<'b>(cobra:&'b Cobrinha, 
 lin:i32, col:i32) -> Direcao {
    // encurtando variáveis com alias.
    let x = cobra.cabeca.posicao.x as i32;
