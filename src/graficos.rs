@@ -14,7 +14,8 @@ use std::time::Instant;
 use crate::{
    Alvos, Cobrinha, Ponto, Direcao,
    VELOCIDADE, colidiu, Dados, Dilutor,
-   introducao, piloto_automatico
+   introducao, piloto_automatico, 
+   string_extensao::StringExtensao
 };
 
 // desenha na tela os bichinhos a serem devorados.
@@ -333,7 +334,7 @@ fn plota_caixa_flutuante(janela: &Window, dados: &Dados) {
       (colunas - largura) / 2
    );
    // pulando linha-em-branco e cabeçalho ...
-   let iterador = dados_str.lines().skip(2);
+   let iterador = dados_str.lines().map(|s| s.desacentua()).skip(2);
 
    for (k, linha) in iterador.enumerate() {
       janela.mv(y+(k as i32), x);

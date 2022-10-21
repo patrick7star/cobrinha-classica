@@ -14,6 +14,8 @@ mod estatisticas;
 mod serializacao;
 mod banco_de_dados;
 mod correcoes;
+mod graficos;
+mod string_extensao;
 
 // importando todas funções úteis.
 pub use modelos::*;
@@ -23,6 +25,7 @@ pub use estatisticas::*;
 pub use serializacao::*;
 pub use banco_de_dados::*;
 pub use correcoes::*;
+pub use graficos::*;
 
 // velocidade(tempo em miliseg de cada novo quadro).
 pub const VELOCIDADE:i32 = 100;

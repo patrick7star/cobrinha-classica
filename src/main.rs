@@ -1,5 +1,6 @@
+
+// bibliotecas externas:
 extern crate rand;
-//extern crate ncurses;
 extern crate pancurses;
 use pancurses::{
    start_color, initscr, endwin, napms,
@@ -10,13 +11,12 @@ use pancurses::{
 // importando da minha biblioteca:
 use cobrinha_classica::*;
 
+const FUNDO:i16 = 99;
+const BORDA:i16 = 98;
+const CORPO:i16 = 97;
 
 // execução de testes...
 fn main() {
-   // ativando unicode characteres...
-   //let local = LcCategory::all;
-   //setlocale(local, "pt.UTF-8");
-
    // iniciando terminal...
    let tabuleiro = initscr();
    start_color();
@@ -30,12 +30,9 @@ fn main() {
     * cobrinha: #2B331A
     */
    // criando novas cores.
-   init_color(99, 204, 255, 158);
-   init_color(98, 0, 0, 0);
-   init_color(97, 0, 0, 0); 
-   const FUNDO:i16 = 99;
-   const BORDA:i16 = 98;
-   const CORPO:i16 = 97;
+   init_color(FUNDO, 204, 255, 158);
+   init_color(BORDA, 0, 0, 0);
+   init_color(CORPO, 0, 0, 0); 
    init_pair(3, COLOR_GREEN, FUNDO);
    init_pair(11, CORPO, FUNDO);
    init_pair(12, COLOR_YELLOW, FUNDO);
@@ -79,5 +76,5 @@ fn main() {
    };
 
    // criando links ao executável.
-   links::linka_executaveis("cobrinha");
+   //linka_executaveis("cobrinha");
 }
