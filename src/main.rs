@@ -76,5 +76,5 @@ fn main() {
    };
 
    // criando links ao executável.
-   //linka_executaveis("cobrinha");
+   links::linka_executaveis("cobrinha");
 }

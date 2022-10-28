@@ -11,18 +11,17 @@ mod alvos;
 mod modelos;
 mod computacoes;
 mod estatisticas;
-mod serializacao;
 mod banco_de_dados;
 mod correcoes;
 mod graficos;
 mod string_extensao;
+pub mod links;
 
 // importando todas funções úteis.
 pub use modelos::*;
 pub use computacoes::*;
 pub use alvos::*;
 pub use estatisticas::*;
-pub use serializacao::*;
 pub use banco_de_dados::*;
 pub use correcoes::*;
 pub use graficos::*;

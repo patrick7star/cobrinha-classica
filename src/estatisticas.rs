@@ -11,15 +11,19 @@
 use crate::{
    Cobrinha, Ponto, 
    Direcao, Alvos, VELOCIDADE, 
-   serializacao::{
-      OutraSerializacao, 
-      Serializacao, 
-   }
 };
 // biblioteca padrão do Rust:
 use std::time::{Instant, Duration};
 use std::fmt::{self, Display};
 use std::primitive::bool;
+
+// módulos complementares a este:
+mod selecao;
+mod serializacao;
+mod utilitarios_basicos;
+use utilitarios_basicos::*;
+// re-exportando conteúdos para este aqui.
+pub use serializacao::*;
 
 /* O registro da cobrinha e dos bugs "devorados"
  * na seguinte ordem: atual posição; 
@@ -28,24 +32,25 @@ use std::primitive::bool;
 pub type Shot = (Ponto, Direcao, u16, u8, u8);
 type Dimensao = (u16, u16);
 
+#[derive(Clone)]
 pub struct Dados {
    // formato: altura x largura. 
-   dimensao: Dimensao,
+   pub dimensao: Dimensao,
    // comprimento inicial da cobrinha.
-   comprimento: u16,
+   pub comprimento: u16,
    // tempo de duração do jogo.
-   tempo_duracao: Option<Duration>,
+   pub tempo_duracao: Option<Duration>,
    // taxa de captura por minuto.
    taxa_captura: u8,
    /* tupla com rastros: Posição, Direção,
     * se há um 'bug' naquele ponto e etc; 
     * em cada instante da cobrinha. Todas
     * registradas colocada numa fila. */ 
-   fila_rastros: Vec<Shot>,
+   pub fila_rastros: Vec<Shot>,
    // verifica missão cumprida.
-   vitoria: bool,
+   pub vitoria: bool,
    // quantia de bichos.
-   total_de_bugs: u8,
+   pub total_de_bugs: u8,
    // velocidades de atualização de frames em milisegundos.
    velocidade: u16,
    // atributos auxiliares:
@@ -105,13 +110,6 @@ impl Dados {
    }
 }
 
-// pega o booleano e traduz em termos de vitória/derrota.
-fn traduz(resultado:bool) -> &'static str {
-   match resultado {
-      true => "VENCEU",
-      false => "PERDEU"
-   }
-}
 
 impl Display for Dados {
    fn fmt(&self, formatador:&mut fmt::Formatter<'_>) 
@@ -167,14 +165,6 @@ impl OutraSerializacao for Shot {
          *bytes.get(3).unwrap(), 
          *bytes.get(4).unwrap()
       ];
-      /*
-      let bytes_ii = [bytes[3], bytes[4]];
-      ( Ponto::deserializa(&bytes[0..2]),
-         Direcao::deserializa(&bytes[2..3]),
-         u16::from_be_bytes(bytes_ii),
-         bytes[5],
-         bytes[6] )
-      */
       ( Ponto::deserializa(bytes.get(0..2).unwrap()),
         Direcao::deserializa(bytes.get(2..3).unwrap()),
         u16::from_be_bytes(array),
@@ -269,17 +259,6 @@ impl Serializacao for Dados {
       let mut fila_rastros: Vec<Shot> = Vec::new();
       // contabilizando remoções.
       while qtd > 0 {
-         /*
-         let bytes: [u8; 7] = [
-            linguicao.remove(0),
-            linguicao.remove(0),
-            linguicao.remove(0),
-            linguicao.remove(0),
-            linguicao.remove(0),
-            linguicao.remove(0),
-            linguicao.remove(0)
-         ];
-         */
          let sete_bytes = linguicao.drain(0..7);
          let tupla = Shot::deserializa(sete_bytes.as_slice());
          fila_rastros.push(tupla);
@@ -310,16 +289,3 @@ impl Serializacao for Dados {
    }
 }
 
-/* pega o tempo em segundos e transforma
- * numa legitíma string, informando o 
- * tempo de forma legível. O range aqui
- * não é muito amplos, pois o jogo sempre
- * gera algo nestes intervalo(minutos e 
- * segundos). */
-fn tempo_legivel(t:Duration) -> String {
-   let tempo = t.as_secs_f32();
-   if tempo > 60.0 
-      { format!("{:0.1} min", tempo / 60.0) }
-   else
-      { format!("{} seg", tempo as u8) }
-}
