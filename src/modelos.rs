@@ -58,6 +58,18 @@ impl Direcao {
 #[derive(Copy, Clone)]
 pub struct Ponto { pub y:u8, pub x: u8 }
 
+impl Ponto {
+   pub fn novo(y: u8, x: u8) -> Self
+      { Self { y, x } }
+}
+
+use std::default::Default;
+
+impl Default for Ponto {
+   fn default() -> Self 
+      { Ponto::novo(1, 1) }
+}
+
 impl Display for Ponto {
    fn fmt(&self, formatador:&mut Formatter<'_>) -> R{
       return write!(
@@ -107,9 +119,10 @@ impl Seta {
       // retorna estrutura criada.
       Seta { 
          sentido: dir,
-         posicao:Ponto{y:linha, x:coluna},
+         posicao:Ponto::novo(linha,coluna),
          forma: simbolo,
-         antiga_posicao:Ponto{y:0, x:0},
+         //antiga_posicao:Ponto{y:0, x:0},
+         antiga_posicao: Default::default()
       }
    }
 

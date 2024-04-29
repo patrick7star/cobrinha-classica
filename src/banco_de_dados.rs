@@ -1,30 +1,30 @@
-
-/** 
-  Aqui ficarão as funções que recuperam/e
-  gravam os dados gerados, estes que são 
-  gerados durante a partida.
+/**
+  Aqui ficarão as funções que recuperam/e gravam os dados gerados, estes 
+  que são gerados durante a partida.
 */
 
 // biblioteca do Rust:
 use std::io::{Read, Write};
 use std::fs::{OpenOptions, File};
-
+use std::convert::{TryInto};
+// Próprio caixote:
 use crate::{Dados, Serializacao};
 
+// Deixando mais legível outputs das funções abaixo:
 type Confirmacao = Result<(), &'static str>;
 type Bytes = Result<Vec<Dados>, &'static str>;
 
 // nome do arquivo.
-const BD:&'static str = "partidas.dat";
+const BANCO:&'static str = "data/partidas.dat";
 
-/// salva a string de bytes no disco.
 pub fn salva_no_bd(dados:Vec<u8>) -> Confirmacao {
+   /* Salva a string de bytes no disco. */
    // abre arquivo para "anexação de dados".
    let mut arquivo:File = {
       OpenOptions::new()
       .append(true)
       .create(true)
-      .open("partidas.dat")
+      .open(BANCO)
       .unwrap()
    };
 
@@ -36,26 +36,18 @@ pub fn salva_no_bd(dados:Vec<u8>) -> Confirmacao {
    // agora os dados do jogo em sí.
    match arquivo.write(&dados[..]) {
       Ok(qtd) => 
-         { println!("gravado {} bytes", qtd); Ok(()) }
+         { println!("Foram gravado {} bytes da partida.", qtd); Ok(()) }
       Err(_) => 
          { Err("erro ao gravar!!!") }
    }
 }
 
-// converte um iterador numa array de 8 elementos.
-fn vetor_para_array(mut vetor:Vec<u8>) -> [u8; 8] {
-   let mut array: [u8; 8] = [0; 8];
-   for (i, e) in vetor.drain(0..).enumerate() 
-      { array[i] = e; }
-   return array;
-}
-
-/// recupera a string de bytes do disco.
-pub fn carrega_do_bd() -> Bytes { 
+pub fn carrega_do_bd() -> Bytes {
+   /* Recupera a string de bytes do disco. */
    let mut arquivo: File = {
       OpenOptions::new()
       .read(true)
-      .open(BD)
+      .open(BANCO)
       .unwrap()
    };
    // lendo todos bytes do arquivo.
@@ -74,8 +66,10 @@ pub fn carrega_do_bd() -> Bytes {
    // compartimentarizando ...
    while !conteudo.is_empty() {
       // total de bytes a drenar:
-      let bytes:Vec<_> = conteudo.drain(0..8).collect();
-      let total:u64 = u64::from_be_bytes(vetor_para_array(bytes));
+      let bytes:Vec<_> = conteudo.drain(0..).collect();
+      // let total:u64 = u64::from_be_bytes(vetor_para_array(bytes));
+      let array = bytes.try_into().unwrap();
+      let total = u64::from_be_bytes(array);
       // drenando ...
       let bytes:Vec<_> = conteudo.drain(0..total as usize).collect();
       dados.push(Dados::deserializa(bytes));

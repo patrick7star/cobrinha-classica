@@ -1,6 +1,8 @@
 
+mod janelas;
+pub use janelas::Tela;
+
 // biblioteca externa:
-extern crate rand;
 extern crate pancurses;
 use pancurses::{
    Input::{Character, KeyDown, KeyUp, KeyRight, KeyLeft}, 
@@ -94,7 +96,11 @@ pub fn plota_cobrinha(janela: &Window, obj:&Cobrinha) {
  * a array de direções que são dado para ela "virar"
  * a cada novo passo. 
  */
-pub fn roda_jogo(janela: &Window, obj:&mut Cobrinha, obj_metas:&mut Alvos) -> Dados {
+pub fn roda_jogo<J>(janela: &mut J, obj:&mut Cobrinha, 
+obj_metas:&mut Alvos) -> Dados 
+  where J: AsMut<Window> 
+{
+   let janela = janela.as_mut();
    // dimensão da tela.
    let (linhas, colunas) = janela.get_max_yx();
    let mut dir: Direcao;
@@ -203,9 +209,8 @@ pub fn roda_jogo(janela: &Window, obj:&mut Cobrinha, obj_metas:&mut Alvos) -> Da
  * e os alvos(bichinhos) quando têm espaço
  * o espaços conflitados entre sí.
  */
-fn barra_status_flutuante(
-janela: &Window, cobra:&Cobrinha, 
-bichos:&Alvos, ja_apagada:&mut bool) {
+fn barra_status_flutuante(janela: &Window, cobra:&Cobrinha, 
+bichos:&Alvos, ja_apagada: &mut bool) {
    // dimensão da tela.
    let tela = janela;
    let linhas = tela.get_max_y();
@@ -276,10 +281,9 @@ bichos:&Alvos, ja_apagada:&mut bool) {
 /* Animação de uma quantia computada de segundos
  * em que haverá animação da cobrinha rodeando 
  * a tela. */
-fn animacao_final(
-   janela: &Window, cobra:&mut Cobrinha, 
-   alvos:&mut Alvos, duracao: u64, dados: &Dados
-) {
+fn animacao_final(janela: &Window, cobra:&mut Cobrinha, 
+  alvos: &mut Alvos, duracao: u64, dados: &Dados) 
+{
    /* animando por um tempo após ter ganho o jogo.
     * continuar com a cobrinha por 1 seg e meio. */
    let mut ja_apagada = false;

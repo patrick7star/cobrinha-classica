@@ -18,6 +18,7 @@ use std::fmt::{self, Display};
 use std::primitive::bool;
 
 // módulos complementares a este:
+#[allow(unused)]
 mod selecao;
 mod serializacao;
 mod utilitarios_basicos;
@@ -26,10 +27,18 @@ use utilitarios_basicos::*;
 pub use serializacao::*;
 
 /* O registro da cobrinha e dos bugs "devorados"
- * na seguinte ordem: atual posição; 
- * atual direção; comprimento; quantia de bugs
- * restantes; taxa de captura de bichinhos. */ 
+ * na seguinte ordem: 
+ *    --> atual posição
+ *    --> atual direção 
+ *    --> comprimento 
+ *    --> quantia de bugs restantes
+ *    --> taxa de captura de bichinhos 
+ * são importantes, pois todas grandezeas acima
+ * variam ao longo do jogo.  */ 
 pub type Shot = (Ponto, Direcao, u16, u8, u8);
+/* dimensão, onde o primeiro elemento 
+ * é a 'altura' da tela, e a segunda 
+ * é sua 'lagura'.  */
 type Dimensao = (u16, u16);
 
 #[derive(Clone)]
@@ -110,7 +119,6 @@ impl Dados {
    }
 }
 
-
 impl Display for Dados {
    fn fmt(&self, formatador:&mut fmt::Formatter<'_>) 
    -> fmt::Result {
@@ -142,6 +150,7 @@ impl Display for Dados {
       );
    }
 }
+
 
 impl OutraSerializacao for Shot {
    fn serializa(&self) -> Vec<u8> {

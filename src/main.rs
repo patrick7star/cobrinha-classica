@@ -1,53 +1,27 @@
 
 // bibliotecas externas:
 extern crate rand;
-extern crate pancurses;
-use pancurses::{
-   start_color, initscr, endwin, napms,
-   COLOR_WHITE,COLOR_YELLOW, COLOR_GREEN,
-   init_color, COLOR_PAIR, init_pair, curs_set
-};
-
 // importando da minha biblioteca:
 use cobrinha_classica::*;
 
-const FUNDO:i16 = 99;
-const BORDA:i16 = 98;
-const CORPO:i16 = 97;
 
 // execução de testes...
 fn main() {
-   // iniciando terminal...
-   let tabuleiro = initscr();
-   start_color();
-   tabuleiro.nodelay(true);
-   tabuleiro.keypad(true);
-   curs_set(0);
+   //use cobrinha_classica::VELOCIDADE;
+   use std::time::Duration;
 
-   /* paleta de cores(
-    * background: #9BBA5A
-    * borda: #272F17
-    * cobrinha: #2B331A
-    */
-   // criando novas cores.
-   init_color(FUNDO, 204, 255, 158);
-   init_color(BORDA, 0, 0, 0);
-   init_color(CORPO, 0, 0, 0); 
-   init_pair(3, COLOR_GREEN, FUNDO);
-   init_pair(11, CORPO, FUNDO);
-   init_pair(12, COLOR_YELLOW, FUNDO);
-   init_pair(13, COLOR_WHITE, FUNDO);
-   init_pair(14, BORDA, FUNDO);
-   tabuleiro.bkgd(' ' as u32 | COLOR_PAIR(11));
-   tabuleiro.border(0, 0, 0, 0, 0, 0, 0, 0 | COLOR_PAIR(14));
-
+   let mut tabuleiro = Tela::nova(
+      Duration::from_millis(700),
+      Duration::from_millis(500),
+      Some("teste_inicial")
+   ).expect("erro na criação da instância");
    // obtendo dimensão do terminal...
-   let (linhas, colunas) = tabuleiro.get_max_yx();
+   let (linhas, colunas) = tabuleiro.dimensao();
    // obtendo a posição do meio da tela.
-   let meio = Ponto { 
-      y:(linhas / 2) as u8, 
-      x:(colunas / 2) as u8 
-   };
+   let meio = Ponto::novo( 
+      (linhas / 2) as u8, 
+      (colunas / 2) as u8 
+   );
 
    // instânciando cobrinha e os bichinhos/alvos.
    let mut cobra = Cobrinha::criar(meio);
@@ -60,21 +34,22 @@ fn main() {
       rand::random::<u16>() % 100 
    );
    // rodando o jogo, e colhendo dados.
-   let dados_do_jogo = roda_jogo(&tabuleiro, &mut cobra, &mut metas); 
+   let dados_do_jogo = roda_jogo(&mut tabuleiro, &mut cobra, &mut metas); 
 
    // finalizando terminal...
-   napms(700);
-   endwin();
-
+   drop(tabuleiro);
    // visualizando informação...
    println!("{}", dados_do_jogo);
 
    // salvando o resultado ...
    match salva_no_bd(dados_do_jogo.serializa()) {
-      Ok(_) => { println!("partida registrada com sucesso."); }
-      Err(erro) => { println!("ERRO:[{}]", erro); }
+      Ok(_) => 
+         { println!("partida registrada com sucesso."); }
+      Err(erro) => 
+         { println!("ERRO:[{}]", erro); }
    };
 
    // criando links ao executável.
    links::linka_executaveis("cobrinha");
+   links::linca_executaveis_externamente("cobrinha-jogo").unwrap();
 }
