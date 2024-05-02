@@ -1,9 +1,9 @@
 [package]
 name = "cobrinha_classica"
-version = "1.0.3"
+version = "1.1.0"
 edition = "2018"
 
 [dependencies]
 pancurses = "0.17.0"
 rand = "0.8.4"
-utilitarios = { path="../rust-utilitarios" }
+utilitarios = { path="../rust-utilitarios/" }
