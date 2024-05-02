@@ -1,10 +1,9 @@
 
 // biblioteca padrão:
 use std::ops::AddAssign;
-
+use std::collections::{VecDeque as Fila};
 // próprio caixote.
-use crate::{Ponto, Direcao, Cobrinha};
-
+use crate::{Ponto, Direcao, Cobrinha, Seta};
 // biblioteca externa:
 extern crate pancurses;
 use pancurses::{ Window, A_REVERSE, napms };
@@ -173,5 +172,54 @@ pub fn encaracola(cobra:&mut Cobrinha) {
    for k in 1..=(n as usize) {
       for _ in 1..=k 
          { cobra.mover(dirs[k % 4]); }
+   }
+}
+
+#[allow(non_snake_case)]
+fn teletransporta_membro(dimensao: (u8, u8), membro: &mut Seta) {
+   let X_RIGHT = dimensao.1 - 1;
+   let Y_BOTTOM = dimensao.0 - 1;
+   const X_LEFT: u8 = 0;
+   const Y_TOP: u8 = 0;
+   let y = membro.posicao.y;
+   let x = membro.posicao.x;
+
+   match membro.sentido {
+      // Se movendo na vertical, então bate...
+      Direcao::Norte => {
+         // na parte superior! É imediatamente transportado para a 
+         // parte inferior.
+         if y == Y_TOP { membro.posicao.y = Y_BOTTOM; }
+      } Direcao::Sul => {
+         // na parte inferior! É transportado para o topo da janela.
+         if y == Y_BOTTOM { membro.posicao.y = Y_TOP; }
+      } 
+      // Se movendo na direção horizontal...
+      Direcao::Leste => {
+         // colide na barreira Leste(direita), loga plota na barreira
+         // Oeste(esquerda).
+         if x == X_RIGHT { membro.posicao.x = X_LEFT; }
+      } Direcao::Oeste => {
+         // colide na barreira Oeste, então aparece na Leste.
+         if x == X_LEFT { membro.posicao.x = X_RIGHT; }
+      }
+   }
+}
+
+pub fn teletransporta_cobrinha(dimensao: (u8, u8), snake: &mut Cobrinha) {
+   let size = snake.membros.len() + 1;
+   let mut todos_membros: Fila<&mut Seta> = Fila::with_capacity(size);
+
+   /* pegando todas referências de membros e colocando na fila de 
+    * processamento ... */
+   todos_membros.push_back(&mut snake.cabeca);
+   for member in snake.membros.iter_mut()
+      { todos_membros.push_back(member); }
+
+   /* Verifica se todos membros da cobrinha bateram com as paredes, se 
+    * este for o caso, os transporta imediatamente para a outra ponta. */
+   while !todos_membros.is_empty() { 
+      let m = todos_membros.pop_front().unwrap();
+      teletransporta_membro(dimensao, m); 
    }
 }

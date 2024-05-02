@@ -41,9 +41,9 @@ impl PartialEq for Direcao {
    }
 }
 
-// implementado recíproca.
 impl Direcao {
    pub fn oposto(&self) -> Self {
+      // retorna a direção oposta a desta instância.
       match *self {
          Direcao::Norte => Direcao::Sul,
          Direcao::Oeste=> Direcao::Leste,
@@ -53,8 +53,8 @@ impl Direcao {
    }
 }
 
-/* estrutura para localizar qualquer coisa 
- * na tela, ou a abstração de tela.  */
+/* estrutura para localizar qualquer coisa na tela, ou a abstração 
+ * de tela.  */
 #[derive(Copy, Clone)]
 pub struct Ponto { pub y:u8, pub x: u8 }
 
@@ -146,51 +146,43 @@ impl Seta {
    }
 }
 
-/* uma sequência de objetos "setas", construindo
- * assim a cobrinha. */
+/* uma sequência de objetos "setas", construindo assim a cobrinha. */
 pub struct Cobrinha {
    pub cabeca:Seta,
    pub membros:Vec<Seta>
 }
 
 impl Cobrinha {
-   /* cria instância da 'Cobrinha', partindo de 
-    * um dado 'Ponto' */
-   pub fn criar(posicao:Ponto) -> Cobrinha {
-      // sentido inicial da cobrinha.
-      let sentido_inicial = Direcao::Norte;
+   #[allow(non_snake_case)]
+   pub fn cria_personalizado(p: Ponto, dir: Direcao, C: usize, 
+     frm: char) -> Self 
+   {
       // guiador do resto do corpo.
-      let  guia = Seta::cria(
-         sentido_inicial, 
-         posicao.y, 
-         posicao.x, '#'
-      );
+      let  guia = Seta::cria(dir, p.y, p.x, frm);
       // lista contendo todos membros.
-      let mut corpo:Vec<Seta> = Vec::new();
+      let mut corpo:Vec<Seta> = Vec::with_capacity(C);
+
       // criação de cinco membros...
-      
-      for i in 1..=5 {
-         // contração para melhor legibilidade.
-         let si = sentido_inicial;
-         match sentido_inicial {
+      for i in 1..=C as u8 {
+         match dir {
             Direcao::Leste => {
-               corpo.push(Seta::cria(si, posicao.y, posicao.x-i, '#'));
-            },
-            Direcao::Oeste => {
-               corpo.push(Seta::cria(si, posicao.y, posicao.x+i, '#'));
-            },
-            Direcao::Sul => {
-               corpo.push(Seta::cria(si, posicao.y-i, posicao.x, '#'));
-            },
-            Direcao::Norte => {
-               corpo.push(Seta::cria(si, posicao.y+i, posicao.x, '#'));
+               corpo.push(Seta::cria(dir, p.y, p.x-i, frm));
+            } Direcao::Oeste => {
+               corpo.push(Seta::cria(dir, p.y, p.x + i, frm));
+            } Direcao::Sul => {
+               corpo.push(Seta::cria(dir, p.y - i, p.x, frm));
+            } Direcao::Norte => {
+               corpo.push(Seta::cria(dir, p.y + i, p.x, frm));
             }
          };
       }
-     
       // retorno da cobrinha.
       Cobrinha { cabeca:guia, membros:corpo}
    }
+
+   /* cria instância da 'Cobrinha', partindo de um dado 'Ponto' */
+   pub fn criar(posicao:Ponto) -> Cobrinha 
+      { Self::cria_personalizado(posicao, Direcao::Norte, 5, '#') }
 
    // move toda 'Cobrinha' um passo na 'Direcao' dada.
    pub fn mover(&mut self, novo:Direcao) {
