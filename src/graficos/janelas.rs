@@ -1,12 +1,8 @@
-
-
-/**!
- Uma instância só para janela. Faz tudo que
- a antiga faz, mas compacta o código por 
- motivos de legibilidade e refatoração.
-
- Aqui também terá a derivada, que cuida só
- do processo de codificação, ou debug.
+/*!
+ Uma instância só para janela. Faz tudo que a antiga faz, mas compacta o 
+ código por motivos de legibilidade e refatoração.
+ Aqui também terá a derivada, que cuida só do processo de codificação, ou 
+ debug.
 */
 
 // bibliotecas externas:
@@ -44,6 +40,7 @@ pub struct Tela {
 }
 
 impl Tela {
+   #[allow(clippy::identity_op)]
    pub fn nova(termino: Duration, taxa: Duration,
      rotulo: Option<&'static str>) -> Result<Self, &str>
    {
@@ -132,6 +129,7 @@ impl AsMut<Window> for Tela {
       { &mut self.janela }
 }
 
+#[allow(clippy::identity_op)]
 pub fn remenda_borda_da_tela(janela: &mut Window) {
    /* Como a cobrinha se choca e atravessa as barreiras, mesmo quando perde,
     * o desenho representando ela é sobre posto, logo tal função conserta
