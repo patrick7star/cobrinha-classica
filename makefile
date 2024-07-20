@@ -1,9 +1,14 @@
 
 all: testes
 
+VERSAO = v1.1.1
 salva:
-	tar -cvf ../versões/cobrinha-classica.v1.1.0.tar \
+	tar -cvf ../versões/cobrinha-classica.$(VERSAO).tar \
 		src/ tests/ data/ Cargo.toml makefile
+
+backups:
+	@echo "\nVisualizando todas versões já produzidas...\n"
+	@ls --size -h --sort=time -1 ../versões/cobrinha-classica*
 
 testes:
 	cargo test -q --offline -- --show-output \
