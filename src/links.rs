@@ -1,13 +1,11 @@
-
-/* cria link simbólico tanto para a versão em debug, quanto para o binário 
+/* Cria link simbólico tanto para a versão em debug, quanto para o binário 
  * final. */
 use std::os::unix::fs::symlink;
 use std::env::current_exe;
 use std::path::{Path, PathBuf};
 
-fn computa_caminho(caminho_str:&str) -> PathBuf {
-   // complementa link ao executável.
-   // à partir do caminho do executável ...
+pub fn computa_caminho(caminho_str:&str) -> PathBuf {
+// Complementa link ao executável à partir do caminho do executável ...
    match current_exe() {
       Ok(mut base) => {
          // remove executável do caminho.
@@ -18,7 +16,8 @@ fn computa_caminho(caminho_str:&str) -> PathBuf {
          base.pop();
          // complementa com o caminho passado.
          base.push(caminho_str);
-         return base;
+
+         base
       } Err(_) =>
          { panic!("não foi possível obter o caminho do executável!"); }
    }
@@ -28,9 +27,8 @@ pub fn linka_executaveis(nome: &str) {
    // caminho aos executáveis.
    let caminho_str = "target/release/cobrinha_classica";
    let executavel = computa_caminho(caminho_str);
-   let executavel_debug: PathBuf;
    let caminho_str = "target/debug/cobrinha_classica";
-   executavel_debug = computa_caminho(caminho_str);
+   let executavel_debug: PathBuf = computa_caminho(caminho_str);
 
    // seus links simbólicos:
    let ld_link = computa_caminho(nome);
@@ -88,7 +86,7 @@ pub fn linca_executaveis_externamente(nome: &str) ->
    if ja_existe_um_linque_simbolico {
       println!("binário do executável já existe em {}.", destino); 
       // apenas retorna o linque que já existe!
-      return Ok (linque.to_path_buf());
+      return Ok (linque);
    } 
 
    print!("criando '{}' ... ", nome);
@@ -96,7 +94,7 @@ pub fn linca_executaveis_externamente(nome: &str) ->
       Ok(_) => {
          println!("com sucesso.");
          // apenas retorna caminho do linque criado.
-         Ok (linque.to_path_buf())
+         Ok (linque)
       } Err(_) => { 
          println!("executável não existe!"); 
          // erro informando que tal executável não existe.

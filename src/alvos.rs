@@ -1,5 +1,4 @@
-/* 
- * cria alvos especializados para serem plotados,
+/* Cria alvos especializados para serem plotados,
  * e quando devorados, somem. O tipo de dado responde
  * a chamada de se há ainda bichinhos.
  */
@@ -29,7 +28,7 @@ pub struct Alvos {
 impl Alvos {
    // cria os alvos, dado uma delimitação de linhas e colunas.
    pub fn cria(linhas:u8, colunas:u8, qtd:u16) -> Alvos {
-      // gera 'n' pontos gerados aleatoriamente.
+   //  Gera 'n' pontos gerados aleatoriamente.
       let mut metas = pontos_aleatorios_consertado(linhas, colunas, qtd);
       // atual alvo:
       let aa = metas.remove(metas.len() / 2);
@@ -45,8 +44,8 @@ impl Alvos {
    }
 
    pub fn sem_alvos(&self) -> bool {
-      /* se houver a mesma quantia de índices
-       * da array, então pegou todos bichos. */
+   /* Se houver a mesma quantia de índices da array, então pegou todos 
+    * bichos. */
       self.posicoes.is_empty() && 
       self.atingidos.len() as u16 == self.total
    }
@@ -56,6 +55,7 @@ impl Alvos {
          Some(p) => p,
          None => { return false; }
       };
+
       if local == ponto { 
          // captura antes ...
          self.atingidos.push(local); 
@@ -69,16 +69,18 @@ impl Alvos {
          // confirma "pergunta".
          return true;
       }
-      return false;
+      false
    }
 
-   pub fn a_mostrar(&self) -> Option<Ponto>
-      { return self.atual_alvo; }
+   pub fn a_mostrar(&self) -> Option<Ponto> { self.atual_alvo }
 
    pub fn qtd_alvos_restantes(&self) -> u16 { 
       let q = self.total; 
       let p = self.atingidos.len() as u16;
-      return q - p;
+
+      /* O restante de alvos podem ser contabilizados na seguinte expressão
+       * númerica: o total subtraído pelos atingidos.*/
+      q - p
    }
 }
 

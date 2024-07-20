@@ -29,11 +29,12 @@ trait CaldaPosicao
    { fn calda(&self) -> Ponto; }
 
 impl CaldaPosicao for Cobrinha {
-   // retorna a posição da calda dela.
    fn calda(&self) -> Ponto {
+   // Retorna a posição da calda dela.
       let ultimo = self.membros.len() - 1;
       let membro = self.membros[ultimo];
-      return membro.posicao;
+
+      membro.posicao
    }
 }
 
@@ -57,8 +58,8 @@ impl Dilutor {
    }
 
    pub fn pode_aumentar(&mut self, objeto: &Cobrinha) -> bool {
-      // tira um da pilha para aumento.
-      if self.atual == None || self.atual.unwrap() == 0
+   // Tira um da pilha para aumento.
+      if self.atual.is_none()  || self.atual.unwrap() == 0
          { self.atual = self.pilha.pop(); }
 
       // verificando se está disponível para aumento.
@@ -99,21 +100,23 @@ impl AddAssign<u8> for Dilutor {
       { self.pilha.push(qtd) }
 }
 
-/* animação que pauso por um instante, para 
- * que se possa situar-se no jogo. A cobrinha
- * arranjada é mostrada. */
 pub fn introducao(janela: &Window) {
+/* Animação que pauso por um instante, para que se possa situar-se no jogo.
+ * A cobrinha arranjada é mostrada. */
    // dimensão da tela.
    let colunas = janela.get_max_x();
    // núcleo da mensagem.
    let mensagem = String::from("O jogo inicia em ...");
+   let (lin, col): (i32, i32) = (3, colunas / 2);
+   let recuo: i32 = mensagem.len() as i32 / 2 + 1;
 
    // computa o ponto do meio.
+   /*
    let (recuo, lin, col):(i32, i32, i32) = (
       mensagem.len() as i32 / 2 + 1, 
                3,
-      (colunas / 2) as i32
-   );
+      colunas / 2
+   ); */
 
    // escrevendo ...
    janela.mv(lin, col - (recuo + 5));
@@ -121,12 +124,15 @@ pub fn introducao(janela: &Window) {
    janela.attrset(A_REVERSE);
    janela.addstr(mensagem.as_str());
    janela.addch(' ');
+
    // escrevendo contagem...
    for k in 0..=5 {
       // contagem está em ...
       let t = (5 - k).to_string();
+
       janela.addstr(t.as_str());
       janela.addch(' ');
+
       // tempo para próxima contagem..
       napms(700);
       janela.refresh();
@@ -137,10 +143,9 @@ pub fn introducao(janela: &Window) {
    janela.clrtoeol();
 }
 
-/* Encaracola cobrinha para quê não inicie
- * o jogo com a calda quebrando os limites
- * da tela. */
 pub fn encaracola(cobra:&mut Cobrinha) {
+/* Encaracola cobrinha para quê não inicie o jogo com a calda quebrando os 
+ * limites da tela. */
    let t: f32 = cobra.tamanho() as f32;
    let dirs = [
       Direcao::Norte,
@@ -148,23 +153,16 @@ pub fn encaracola(cobra:&mut Cobrinha) {
       Direcao::Sul,
       Direcao::Oeste
    ];
-   /* de onde vêm tal fórmula:
-    * a cobrinha dá 1 passo ao 
-    * norte; depois 2 passo ao Oeste;
-    * então 3 passos ao Sul; 4 passos
-    * ao Leste; 5 passos ao... Norte
-    * outra vez; e etc. Isso até enrolá
-    * todo seu corpo de comprimento 't'.
-    * Portanto, os 'n' passos crescentes 
-    * dados de modo circular têm que somar 
-    * (1+2+3+...+n) menor que o comprimento
-    * 't' dela. Assim, o melhor 'n' é o
-    * valor da soma aritmética que  bate 
-    * ou fica no limite de 't'. A  seguinte 
-    * inequação: 1+2+3+...+n < t. Reduzindo
-    * ela a um equivalente mais fácil de
-    * resolução chegamos no seguinte:
-    *       n^2 + n -2t < 0
+   /*   De onde vêm tal fórmula? A cobrinha dá 1 passo ao norte; depois 2 
+    * passo ao Oeste; então 3 passos ao Sul; 4 passos ao Leste; 5 passos 
+    * ao... Norte outra vez; e etc. Isso até enrolá todo seu corpo de 
+    * comprimento 't'. Portanto, os 'n' passos crescentes dados de modo 
+    * circular têm que somar (1+2+3+...+n) menor que o comprimento 't' dela.
+    * Assim, o melhor 'n' é o valor da soma aritmética que  bate ou fica no
+    * limite de 't'. A  seguinte inequação: 1+2+3+...+n < t. Reduzindo ela 
+    * a um equivalente mais fácil de resolução chegamos no seguinte:
+    *
+    *                      n^2 + n -2t < 0
     */
    let delta = 1.0 + 9.0 * t;
    let n = (-1.0 + delta.sqrt()) / 2.0;

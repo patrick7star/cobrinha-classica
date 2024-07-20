@@ -39,7 +39,7 @@ impl StringExtensao for str {
          if ch == 'ç' { qtd += 1; }
       }
       let tamanho = self.len();
-      return tamanho - qtd;
+      tamanho - qtd
    }
 
    fn desacentua(&self) -> String {
@@ -62,7 +62,7 @@ impl StringExtensao for str {
          else
             { rolo.push(char_); }
       }
-      return rolo;
+      rolo
    }
 }
 
@@ -91,6 +91,6 @@ impl StringExtensao for String {
          else
             { rolo.push(char_); }
       }
-      return rolo;
+      rolo
    }
 }

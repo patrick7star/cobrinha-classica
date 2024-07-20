@@ -1,10 +1,8 @@
 
-/**
- Aqui serão tanto coletados, como possíveis
- de armazenamento os dados gerados no jogo,
- como os dados "externos" ao jogos, tipo quantia
- de teclas pressionadas e a dimensão da janela
- de tal, e etc.
+/*!
+ Aqui serão tanto coletados, como possíveis de armazenamento os dados 
+ gerados no jogo, como os dados "externos" ao jogos, tipo quantia de teclas
+ pressionadas e a dimensão da janela de tal, e etc.
 */
 
 // própria 'lib'.
@@ -111,17 +109,17 @@ impl Dados {
 
       // registrar capturas por minuto.
       let t = self.cronometro.unwrap().elapsed().as_secs();
+
       if t %  60 == 0 {
          let m = self.total_de_bugs;
          let n = bugs.qtd_alvos_restantes();
-         self.taxa_captura = (m - n as u8) as u8;
+         self.taxa_captura = m - (n as u8) ;
       }
    }
 }
 
 impl Display for Dados {
-   fn fmt(&self, formatador:&mut fmt::Formatter<'_>) 
-   -> fmt::Result {
+   fn fmt(&self, formatador:&mut fmt::Formatter<'_>) -> fmt::Result {
       let indice = self.fila_rastros.len() - 1;
       let qtd_devorados:u8 = {
          let qi = self.fila_rastros[indice].3;
@@ -130,12 +128,13 @@ impl Display for Dados {
       };
       // comprimento final da cobrinha.
       let cf:u16 = self.fila_rastros[indice].2;
-      return write!(
+
+      write!(
          formatador,
          "\n----- INFO DO JOGO ------
          \rresultado: {}
          \rdimensão: {}x{}
-         \rcaptura: {}/min
+         \rcaptura: {} bugs / min
          \rduração: {}
          \rpassos dados: {}
          \rbugs devorados:{}
@@ -147,7 +146,7 @@ impl Display for Dados {
          self.fila_rastros.len(),
          qtd_devorados,
          cf - self.comprimento
-      );
+      )
    }
 }
 
@@ -156,6 +155,7 @@ impl OutraSerializacao for Shot {
    fn serializa(&self) -> Vec<u8> {
       // acumulador de bytes.
       let mut bytes: Vec<u8> = Vec::new();
+
       // Ponto:
       bytes.extend_from_slice(self.0.serializa().as_slice());
       // Direção:
@@ -166,7 +166,9 @@ impl OutraSerializacao for Shot {
       bytes.push(self.3);
       // Taxa de captura média:
       bytes.push(self.4);
-      return bytes;
+
+      // Retornando a array de bytes do elemento serializado...
+      bytes
    }
 
    fn deserializa(bytes:&[u8]) -> Shot {
@@ -174,6 +176,7 @@ impl OutraSerializacao for Shot {
          *bytes.get(3).unwrap(), 
          *bytes.get(4).unwrap()
       ];
+
       ( Ponto::deserializa(bytes.get(0..2).unwrap()),
         Direcao::deserializa(bytes.get(2..3).unwrap()),
         u16::from_be_bytes(array),
@@ -188,10 +191,13 @@ impl OutraSerializacao for Dimensao {
    fn serializa(&self) -> Vec<u8> {
       // pega os bytes do primeiro elemento(altura).
       let mut bytes: Vec<u8> = self.0.serializa();
+
       // "concatena" o segundo neste(largura).
       bytes.extend_from_slice(self.1.serializa().as_slice());
-      return bytes;
+      // Retornando a array de bytes do elemento serializado...
+      bytes
    }
+
    fn deserializa(bytes: &[u8]) -> Dimensao {
       if bytes.len() != 4
          { panic!("não têm os 4 bytes exigidos!"); }
@@ -250,7 +256,9 @@ impl Serializacao for Dados {
       bytes.push(total_de_bugs);
       // 2 bytes.
       bytes.extend_from_slice(&velocidade[..]);
-      return bytes;
+
+      // Retornando a array de bytes do elemento serializado...
+      bytes
    }
 
    fn deserializa(mut linguicao:Vec<u8>) -> Dados {
@@ -266,6 +274,7 @@ impl Serializacao for Dados {
       // quinto atributo(fila de rastros).
       let mut qtd = u16::deserializa(linguicao.drain(0..2).as_slice());
       let mut fila_rastros: Vec<Shot> = Vec::new();
+
       // contabilizando remoções.
       while qtd > 0 {
          let sete_bytes = linguicao.drain(0..7);
@@ -273,17 +282,18 @@ impl Serializacao for Dados {
          fila_rastros.push(tupla);
          qtd -= 1;
       }
+
       // sexto atributo(vitória).
       let vitoria = bool::deserializa(linguicao.drain(0..1).as_slice());
       // sétimo atributo(total de BUG's).
       let total_de_bugs = linguicao.remove(0);
       // oitavo atributo(velocidade).
       let velocidade = u16::deserializa(linguicao.drain(0..2).as_slice());
+
       // têm que está vázio.
       assert!(linguicao.is_empty());
-      /* criando tipo de dados com todas seus
-       * atributos. */
-      return Self {
+      /* Criando tipo de dados com todas seus atributos. */
+      Self {
          dimensao,
          comprimento,
          tempo_duracao,
@@ -294,7 +304,7 @@ impl Serializacao for Dados {
          velocidade,
          // irrelevante.
          cronometro: None,
-      };
+      }
    }
 }
 

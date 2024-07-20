@@ -10,35 +10,27 @@ use std::ops::AddAssign;
 pub enum Direcao { Norte, Oeste, Leste, Sul }
 
 impl PartialEq for Direcao {
-   // verifica se são iguais.
    fn eq(&self, other:&Self) -> bool {
-      // qual direção o argumento da direita retorna.
       let direita:char = match *self {
+      // Qual direção o argumento da direita retorna.
          Direcao::Norte => 'N',
          Direcao::Leste => 'L',
          Direcao::Sul => 'S',
          Direcao::Oeste => 'O',
       };
-      // qual direção o argumento da esquerda retorna.
       let esquerda:char = match other {
+      // Qual direção o argumento da esquerda retorna.
          Direcao::Norte => 'N',
          Direcao::Leste => 'L',
          Direcao::Sul => 'S',
          Direcao::Oeste => 'O',
       };
-      // ele são iguais?   
-      return direita == esquerda;
-      /*
-      match *self {
-         other => true,
-         _ => false,
-      }*/
 
+      // ele são iguais?   
+      direita == esquerda
    }
    // retorna a negação do primeiro método.
-   fn ne(&self, other:&Self) -> bool {
-      ! self.eq(other)
-   }
+   // fn ne(&self, other:&Self) -> bool { ! self.eq(other) }
 }
 
 impl Direcao {
@@ -71,32 +63,19 @@ impl Default for Ponto {
 }
 
 impl Display for Ponto {
-   fn fmt(&self, formatador:&mut Formatter<'_>) -> R{
-      return write!(
-         formatador, 
-         "linha={0} coluna={1}", 
-         self.y, self.x
-      );
-   }
+   fn fmt(&self, formatador:&mut Formatter<'_>) -> R
+      { write!(formatador, "linha={0} coluna={1}", self.y, self.x) }
 }
 
 impl Debug for Ponto {
-   fn fmt(&self, formatador:&mut Formatter<'_>) -> R{
-      return write!(
-         formatador, 
-         "y={0} x={1}", 
-         self.x, self.y
-      );
-   }
+   fn fmt(&self, formatador:&mut Formatter<'_>) -> R
+      { write!( formatador, "y={0} x={1}", self.x, self.y) }
 }
 
 impl PartialEq for Ponto {
-   fn eq(&self, ponto:&Ponto) -> bool {
-      self.y == ponto.y && self.x == ponto.x
-   }
-   fn ne(&self, ponto:&Ponto) -> bool {
-      return !(self.eq(ponto));
-   }
+   fn eq(&self, ponto:&Ponto) -> bool 
+      { self.y == ponto.y && self.x == ponto.x }
+   // fn ne(&self, ponto:&Ponto) -> bool { !(self.eq(ponto)) }
 }
 
 // objeto que se movimenta na tela. 
@@ -163,7 +142,7 @@ impl Cobrinha {
       let mut corpo:Vec<Seta> = Vec::with_capacity(C);
 
       // criação de cinco membros...
-      for i in 1..=C as u8 {
+      for i in 1..=(C as u8) {
          match dir {
             Direcao::Leste => {
                corpo.push(Seta::cria(dir, p.y, p.x-i, frm));
@@ -221,25 +200,21 @@ impl Cobrinha {
    }
    
    // computa atual posição da cabeça da 'Cobrinha'.
-   pub fn posicao(&self) -> Ponto 
-      { return self.cabeca.posicao; }
+   pub fn posicao(&self) -> Ponto { self.cabeca.posicao }
 
    // computa quantia de membros da 'Cobrinha'.
-   pub fn tamanho(&self) -> usize 
-      { return self.membros.len() + 1; }
+   pub fn tamanho(&self) -> usize { self.membros.len() + 1 }
 
    // sentido atual da cobrinha.
-   pub fn sentido(&self) -> Direcao
-      { self.cabeca.sentido }
+   pub fn sentido(&self) -> Direcao { self.cabeca.sentido }
 }
 
 // adicionando um novo modo de adicionar novo membro.
 impl AddAssign<usize> for Cobrinha {
    // implementando a adição.
    fn add_assign(&mut self, mut qtd:usize) {
-      /* Processo de adicionar novo membro. Separando
-       * assim, pois fatoração melhora a legibilidade
-       * do código. */
+      /* Processo de adicionar novo membro. Separando assim, pois fatoração
+       * melhora a legibilidade do código. */
       fn adiciona_novo_membro(cobra:&mut Cobrinha) {
          // obtendo o último membro da fila no momento.
          let ultimo_mbr = cobra.membros[cobra.membros.len()-1];

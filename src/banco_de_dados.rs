@@ -8,26 +8,28 @@ use std::io::{Read, Write};
 use std::fs::{OpenOptions, File};
 use std::convert::{TryInto};
 // Próprio caixote:
-use crate::{Dados, Serializacao};
+use crate::{computa_caminho, Dados, Serializacao};
 
 // Deixando mais legível outputs das funções abaixo:
 type Confirmacao = Result<(), &'static str>;
 type Bytes = Result<Vec<Dados>, &'static str>;
 
 // nome do arquivo.
-const BANCO:&'static str = "data/partidas.dat";
+const BANCO:&str = "data/partidas.dat";
 
+#[allow(clippy::unused_io_amount)]
 pub fn salva_no_bd(dados:Vec<u8>) -> Confirmacao {
-   /* Salva a string de bytes no disco. */
+/* Salva a string de bytes no disco. */
+   let caminho = computa_caminho(BANCO);
+   println!("{}", caminho.display());
    // abre arquivo para "anexação de dados".
    let mut arquivo:File = {
       OpenOptions::new()
       .append(true)
       .create(true)
-      .open(BANCO)
+      .open(caminho)
       .unwrap()
    };
-
    // total de bytes vai primeiro.
    let total_de_bytes: u64 = dados.len() as u64;
    let bytes = total_de_bytes.to_be_bytes();
@@ -43,11 +45,11 @@ pub fn salva_no_bd(dados:Vec<u8>) -> Confirmacao {
 }
 
 pub fn carrega_do_bd() -> Bytes {
-   /* Recupera a string de bytes do disco. */
+/* Recupera a string de bytes do disco. */
    let mut arquivo: File = {
       OpenOptions::new()
       .read(true)
-      .open(BANCO)
+      .open(computa_caminho(BANCO))
       .unwrap()
    };
    // lendo todos bytes do arquivo.
@@ -101,5 +103,11 @@ mod tests {
          { println!("{}", dado); }
       // avaliação manual.
       assert!(true);
+   }
+
+   #[test]
+   fn caminho_ao_bdd() {
+      let caminho = computa_caminho(BANCO);
+      println!("{}", caminho.display());
    }
 }
