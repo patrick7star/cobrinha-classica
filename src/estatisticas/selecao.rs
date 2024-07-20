@@ -10,23 +10,27 @@ use crate::{carrega_do_bd, Dados};
 // array do tipo 'Dados'.
 type Partidas = Vec<Dados>;
 
-/* apenas as partidas 'vencidas' ou 
- * 'perdidas'. */
+/* Apenas as partidas 'vencidas' ou 'perdidas'. */
 pub fn filtra_por_resultado(vitorioso: bool) -> Partidas {
-   // carrega o banco de dados ...
    match carrega_do_bd() {
       Ok(mut dados) => {
          let mut selecao = Partidas::new();
          for p in dados.drain(0..) {
+            /*
             if vitorioso {
                if p.vitoria
                   { selecao.push(p); }
             } else {
                if !p.vitoria
                   { selecao.push(p); }
-            }
+            }*/
+            if vitorioso {
+               if p.vitoria
+                  { selecao.push(p); }
+            } else if !p.vitoria
+               { selecao.push(p); }
          }
-         return selecao;
+         selecao
       } Err(_) =>
          { panic!("não foi possível carrega-lôs"); }
    }
@@ -42,16 +46,13 @@ pub enum Ordenacao {
    // tempo de duração da partida.
    TempoDeDuracao,
 }
-/* relegando aqui tal tarefa para não ter
- * que ficar aninhando o código, ainda mais
- * com pouco margem. */
+
 impl Ordenacao {
-   /* O que é verificad é 
-    * se o primeiro parâmetro é maior que o
-    * segundo, simples assim. */
    pub fn maior_comprimento(a: &Dados, b: &Dados) -> bool {
-      // comprimento do primeiro.
+   /* O que é verificad é se o primeiro parâmetro é maior que o segundo, 
+    * simples assim. */
       let ca = {
+      // Comprimento do primeiro.
          let xi = a.comprimento;
          let xf = comprimento_final(a);
          if xf > xi
@@ -59,8 +60,8 @@ impl Ordenacao {
          else
             { xi - xf }
       };
-      // comprimento do segundo.
       let cb = {
+      // Comprimento do segundo.
          let xi = b.comprimento;
          let xf = comprimento_final(b);
          if xf > xi
@@ -69,24 +70,26 @@ impl Ordenacao {
             { xi - xf }
       };
       // verifica proposição.
-      return ca > cb;
+      ca > cb
    }
-   /* ordena baseado na maior dimensão, 
-    * para menor. */
+
    pub fn maior_dimensao(a: &Dados, b: &Dados) -> bool {
+   /* Ordena baseado na maior dimensão, para menor. */
       let area_a = a.dimensao.0 * a.dimensao.1;
       let area_b = b.dimensao.0 * b.dimensao.1;
-      return area_a > area_b;
+
+      area_a > area_b
    }
 }
 
-/* ordenada as lista puxada pela memória baseada
- * no tipo de 'Ordenação' encomendada. */
+#[allow(clippy::needless_borrow)]
 pub fn filtra(ordem: Ordenacao) -> Partidas {
-   // carrega o banco de dados ...
+/* Ordenada as lista puxada pela memória baseada no tipo de 'Ordenação' 
+ * encomendada. */
    match carrega_do_bd() {
       Ok(dados) => {
-         assert!(dados.len() > 0);
+         // assert!(dados.len() > 0);
+         assert!(!dados.is_empty());
          let mut selecao: Partidas = Vec::new();
          // insert sort(partidas mais longas à esquerda).
          for a in dados.iter() {
@@ -115,7 +118,7 @@ pub fn filtra(ordem: Ordenacao) -> Partidas {
             selecao.insert(indice, a.clone());
          }
          assert_eq!(dados.len(), selecao.len());
-         return selecao;
+         selecao
       } Err(_) =>
          { panic!("não foi possível carrega-lôs"); }
    }
@@ -123,7 +126,7 @@ pub fn filtra(ordem: Ordenacao) -> Partidas {
 
 fn comprimento_final(dados: &Dados) -> u16 {
    let ultimo = dados.fila_rastros.len() - 1;
-   return dados.fila_rastros[ultimo].2;
+   dados.fila_rastros[ultimo].2
 }
 
 
@@ -207,5 +210,38 @@ mod tests {
          if p >= ultimo - 6 
             { println!("{}", a); }
       }
+   }
+
+   use utilitarios::terminal_dimensao::{dimensao, Largura, Altura};
+   use crate::estatisticas::Dimensao;
+
+   fn cabe_dentro(j: Dimensao, t: Dimensao) -> bool 
+      { t.0 <= j.0 && t.1 <= j.1 }
+
+   #[test]
+   fn CabeNaAtualTela() {
+      let (H, L): Dimensao = {
+         match dimensao() {
+            Some((Largura(l), Altura(a))) => (a, l),
+            None => { assert!(false); todo!() }
+         }
+      };
+      let lista = filtra(Ordenacao::Dimensao);
+      let total = lista.len() as f32;
+      let mut cabivel = 0.0f32;
+      let ultimo = lista.len()-1;
+      println!("atual dimensão {}x{}", H, L);
+      for dado in lista {
+         let tela_dim = dado.dimensao;
+         let janela_dim = (H, L);
+         if !cabe_dentro(janela_dim, tela_dim)
+            { continue; }
+         println!("\t{}x{}", tela_dim.0, tela_dim.1);
+         cabivel += 1.0;
+      }
+      println!(
+         "cabém na tela do terminal:{:>5.1}%", 
+         (cabivel/total) * 100.0
+      );
    }
 }

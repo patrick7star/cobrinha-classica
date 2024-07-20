@@ -1,10 +1,5 @@
-
-/* Alguns traits para serialização de 
- * objetos específicos, que são muito
- * comuns nos programas aqui codificados.
- */
-
-
+/* Alguns traits para serialização de objetos específicos, que são muito
+ * comuns nos programas aqui codificados. */
 
 /** Serialização de um tipo de dado dinâmico, que
  * pode aumentar ou diminuir ao longo da execução.
@@ -107,8 +102,10 @@ impl OutraSerializacao for Direcao {
          Direcao::Oeste => vec![b'O'],
       }
    }
-   // transforma mero byte na direção equivalente.
+
+   #[allow(clippy::wildcard_in_or_patterns)]
    fn deserializa(byte:&[u8]) -> Direcao {
+   // Transforma mero byte na direção equivalente.
       match byte.first() {
          Some(&b'N') =>  { Direcao::Norte }
          Some(&b'S') => { Direcao::Sul }
@@ -121,21 +118,23 @@ impl OutraSerializacao for Direcao {
 }
 
 impl OutraSerializacao for Ponto {
-   // transforma o tipo de enum num byte.
    fn serializa(&self) -> Vec<u8> {
+   // Transforma o tipo de enum num byte.
       // retornando dois bytes, representando cada atributo.
-      return vec![self.x, self.y];
+      vec![self.x, self.y]
    }
+
    fn deserializa(bytes:&[u8]) -> Ponto {
       if bytes.len() != 2
          { panic!("só é preciso de 2 bytes."); }
+
       // retorna nova instância do ponto.
-      return Ponto {
+      Ponto {
          // convertendo para um valor 8-bits sem sinal...
          x: bytes[0],
          // o outro valor...
          y: bytes[1]
-      };
+      }
    }
 }
 
