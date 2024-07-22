@@ -1,4 +1,3 @@
-
 /*!
  Aqui serão tanto coletados, como possíveis de armazenamento os dados 
  gerados no jogo, como os dados "externos" ao jogos, tipo quantia de teclas
@@ -6,14 +5,10 @@
 */
 
 // própria 'lib'.
-use crate::{
-   Cobrinha, Ponto, 
-   Direcao, Alvos, VELOCIDADE, 
-};
+use crate::{ Cobrinha, Ponto, Direcao, Alvos, VELOCIDADE };
 // biblioteca padrão do Rust:
 use std::time::{Instant, Duration};
 use std::fmt::{self, Display};
-use std::primitive::bool;
 
 // módulos complementares a este:
 #[allow(unused)]
@@ -24,43 +19,40 @@ use utilitarios_basicos::*;
 // re-exportando conteúdos para este aqui.
 pub use serializacao::*;
 
-/* O registro da cobrinha e dos bugs "devorados"
- * na seguinte ordem: 
- *    --> atual posição
- *    --> atual direção 
- *    --> comprimento 
- *    --> quantia de bugs restantes
- *    --> taxa de captura de bichinhos 
- * são importantes, pois todas grandezeas acima
- * variam ao longo do jogo.  */ 
+/* O registro da cobrinha e dos bugs "devorados" na seguinte ordem: 
+ *          - atual posição
+ *          - atual direção 
+ *          - comprimento 
+ *          - quantia de bugs restantes
+ *          - taxa de captura de bichinhos 
+ *
+ * São importantes, pois todas grandezeas acima variam ao longo do jogo. */
 pub type Shot = (Ponto, Direcao, u16, u8, u8);
-/* dimensão, onde o primeiro elemento 
- * é a 'altura' da tela, e a segunda 
- * é sua 'lagura'.  */
+/* Dimensão, onde o primeiro elemento é a 'altura' da tela, e a segunda é 
+ * sua 'lagura'.  */
 type Dimensao = (u16, u16);
 
 #[derive(Clone)]
 pub struct Dados {
-   // formato: altura x largura. 
+   // Formato: altura x largura. 
    pub dimensao: Dimensao,
-   // comprimento inicial da cobrinha.
+   // Comprimento inicial da cobrinha.
    pub comprimento: u16,
-   // tempo de duração do jogo.
+   // Tempo de duração do jogo.
    pub tempo_duracao: Option<Duration>,
    // taxa de captura por minuto.
    taxa_captura: u8,
-   /* tupla com rastros: Posição, Direção,
-    * se há um 'bug' naquele ponto e etc; 
-    * em cada instante da cobrinha. Todas
-    * registradas colocada numa fila. */ 
+   /* Tupla com rastros: Posição, Direção, se há um 'bug' naquele ponto e 
+    * etc; em cada instante da cobrinha. Todas registradas colocada numa 
+    * fila. */ 
    pub fila_rastros: Vec<Shot>,
-   // verifica missão cumprida.
+   // Verifica missão cumprida.
    pub vitoria: bool,
-   // quantia de bichos.
+   // Quantia de bichos.
    pub total_de_bugs: u8,
-   // velocidades de atualização de frames em milisegundos.
+   // Velocidades de atualização de frames em milisegundos.
    velocidade: u16,
-   // atributos auxiliares:
+   // Atributos auxiliares:
    cronometro: Option<Instant>,
 }
 
@@ -126,26 +118,28 @@ impl Display for Dados {
          let qf = self.total_de_bugs;
          qf - qi
       };
-      // comprimento final da cobrinha.
-      let cf:u16 = self.fila_rastros[indice].2;
+      // Comprimento final da cobrinha.
+      let cf = self.fila_rastros[indice].2;
+      let ci = self.comprimento;
+      let aumento_de_comprimento = cf - ci;
 
       write!(
          formatador,
-         "\n----- INFO DO JOGO ------
-         \rresultado: {}
-         \rdimensão: {}x{}
-         \rcaptura: {} bugs / min
-         \rduração: {}
-         \rpassos dados: {}
-         \rbugs devorados:{}
-         \raumento: {}\n", 
+         "\n--- --- --- --- INFO DO JOGO --- --- --- ---
+         \rresultado: {:>20}
+         \rdimensão: {:>17}x{}
+         \rcaptura: {:>18} bugs / min
+         \rduração: {:>24}
+         \rpassos dados: {:>18}
+         \rbugs devorados:{:>13}
+         \raumento: {:>19}\n", 
          traduz(self.vitoria),
          self.dimensao.0, self.dimensao.1,
          self.taxa_captura,
          tempo_legivel(self.tempo_duracao.unwrap()),
          self.fila_rastros.len(),
          qtd_devorados,
-         cf - self.comprimento
+         aumento_de_comprimento
       )
    }
 }
@@ -308,3 +302,24 @@ impl Serializacao for Dados {
    }
 }
 
+#[cfg(test)]
+#[allow(non_snake_case)]
+mod tests {
+   use super::{Duration, Dados, Ponto, Direcao};
+
+   #[test]
+   fn nova_forma_de_display_dos_dados_estatisticos() {
+      let rI = (Ponto::novo(152, 23), Direcao::Sul, 15, 40, 10);
+      let rII = (Ponto::novo(2, 60), Direcao::Norte, 30, 20, 11);
+
+      let datum = Dados { 
+         dimensao: (25, 150), comprimento: 15,  
+         tempo_duracao: Some(Duration::from_secs(150)),
+         taxa_captura: 25, fila_rastros: vec![rI, rII], 
+         vitoria: false, total_de_bugs: 91, velocidade: 500, 
+         cronometro: None
+      }; 
+
+      println!("{}", datum);
+   }
+}

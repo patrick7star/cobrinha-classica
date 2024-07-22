@@ -1,6 +1,4 @@
 
-mod janelas;
-pub use janelas::{remenda_borda_da_tela, Tela};
 // biblioteca externa:
 extern crate pancurses;
 use pancurses::{
@@ -9,20 +7,16 @@ use pancurses::{
 };
 // biblioteca do Rust:
 use std::time::Instant;
+use std::convert::TryInto;
 // importando da minha biblioteca:
+mod janelas;
 use crate::{
-   Alvos, Cobrinha, Ponto, Direcao,
-   VELOCIDADE, colidiu, Dados, Dilutor,
-   introducao, piloto_automatico, 
-   string_extensao::StringExtensao
+   Alvos, Cobrinha, Ponto, Direcao, VELOCIDADE, colidiu, Dados, Dilutor,
+   introducao, piloto_automatico, string_extensao::StringExtensao,
+   colidiu_com_ela_mesma
 };
 use crate::teletransporta_cobrinha;
-use std::time::{Duration};
-
-// Variáveis globais importantes para algumas funções abaixo:
-static mut VOLTAS: u16 = 0;
-static mut CURSOR: usize = 0;
-static mut KILOMETRAGEM: u16 = 0;
+pub use janelas::{remenda_borda_da_tela, Tela};
 
 
 // desenha na tela os bichinhos a serem devorados.
@@ -188,11 +182,14 @@ fn barra_status_flutuante(janela: &Window, cobra:&Cobrinha, bichos:&Alvos,
    let tela = janela;
    // Dimensão vertical da tela.
    let linhas = tela.get_max_y();
+   /* Como há apenas a formatação debug, não é possível colocar margens,
+    * por isso uma formatação em string. */
+   let sentido_str = format!("{:#?}", cobra.cabeca.sentido);
 
    let barra = { 
-      format!("\trestantes:{}\tcomprimento:{}",
+      format!("\trestantes:{}\tcomprimento:{}\tsentido:{:<6}",
          bichos.qtd_alvos_restantes(),
-         cobra.tamanho()
+         cobra.tamanho(), sentido_str
       )
    };
    // cálculo de centralização.
@@ -204,23 +201,19 @@ fn barra_status_flutuante(janela: &Window, cobra:&Cobrinha, bichos:&Alvos,
          cobra.posicao().y as i32 == linhas-2 
          && cobra.posicao().x as i32 >= posicao_coluna
       };
-      /* verificando se algum membro 
-       * também está acima... */
+      /* Verificando se algum membro também está acima... */
       let p2:bool = {
          /* array com valores lógicos dizendo se cada
           * membro está ou não, acima da barrastatus.*/
          let mut respota_cada:Vec<bool>;
          respota_cada = vec![ false; cobra.membros.len() ];
          /* Índice da array acima para acessar/modificar valor lógico. */
-         // let mut indice = 0;
-         // for parte in &cobra.membros {
          // Verificando cada membro.
          for (indice, parte) in cobra.membros.iter().enumerate() {
             // se estiver acima, "afirmar" isso na array.
             if parte.posicao.y as i32 == linhas-2 &&
                parte.posicao.x as i32 >= posicao_coluna
                   { respota_cada[indice] = true; }
-            // indice += 1;
          }
          /* se qualquer membro estiver acima, então a
           * cobrinha também está. */
@@ -239,20 +232,12 @@ fn barra_status_flutuante(janela: &Window, cobra:&Cobrinha, bichos:&Alvos,
       *ja_apagada = false;
 
    } else if !(*ja_apagada) {
+      let linha_da_barra_status = linhas - 2;
       // move para a linha e apaga-a.
-      tela.mv(linhas-2, 1);
+      tela.mv(linha_da_barra_status, 1);
       tela.clrtoeol();
       *ja_apagada = true;
    }
-   /*
-   else {
-      if !(*ja_apagada) {
-         // move para a linha e apaga-a.
-         tela.mv(linhas-2, 1);
-         tela.clrtoeol();
-         *ja_apagada = true;
-      }
-   } */
 }
 
 #[allow(clippy::wildcard_in_or_patterns)]
@@ -327,8 +312,7 @@ fn plota_caixa_flutuante(janela: &Window, dados: &Dados) {
 
 #[allow(clippy::needless_borrow)]
 pub fn roda_jogo_sem_barreiras<J>(janela: &mut J, obj:&mut Cobrinha, 
-obj_metas:&mut Alvos) -> Dados 
-  where J: AsMut<Window> 
+  obj_metas:&mut Alvos) -> Dados where J: AsMut<Window> 
 {
 /* Dá inicio ao jogo, só que esta aqui tem uma configuração especial, pois
  * não restringe a 'cobrinha' ao tamanho da tela, assim quando há colisão
@@ -353,13 +337,17 @@ obj_metas:&mut Alvos) -> Dados
    let mut controlador = Dilutor::instancia(limite);
    let __nao_debug__ = !cfg!(debug_assertions); 
    let mut exit_pressionado: bool = false;
+   let dim: (u8, u8) = (
+      (linhas - 1).try_into().unwrap(), 
+      (colunas - 1).try_into().unwrap()
+   );
 
    // apresentação ao iniciar o jogo.
    plota_cobrinha(janela, obj);
    introducao(janela);
 
    // enquanto todos alvos/bichos não se forem...
-   while !obj_metas.sem_alvos() {
+   while !obj_metas.sem_alvos() && !colidiu_com_ela_mesma(obj) {
       // colhendo dados antes do próximo movimento.
       metadados.atualiza(obj, obj_metas);
 
@@ -369,6 +357,7 @@ obj_metas:&mut Alvos) -> Dados
       ); 
       // move a cobrinha.
       obj.mover(dir);
+      teletransporta_cobrinha(dim, obj);
       plota_cobrinha(janela, &obj);
       
       // se estiver no local de um "bicho", captura-lô.
@@ -461,63 +450,3 @@ fn controladores_da_cobrinha(janela: &mut Window, obj: &mut Cobrinha,
    // retorna a direção selecionada.
    atual_direcao
 }
-
-fn alterna_direcao() -> Direcao {
-   const ROTAS: [Direcao; 4] = [
-      Direcao::Leste, Direcao::Norte,
-      Direcao::Oeste, Direcao::Sul
-   ];
-
-   if unsafe { VOLTAS } == 3 
-      // aumenta o cursor para próxima direção e reseta voltas contadas.
-      { unsafe { CURSOR += 1; VOLTAS = 0; KILOMETRAGEM = 0; } }
-   unsafe { ROTAS[CURSOR % 4] }
-}
-
-fn conta_voltas_da_cobrinha(limite_h: u16) {
-/* Adicionando de vez em quando isso desviará a cobrinhar de sempre 
- * virar no mesmo ponto 'x' ou 'y'. */
-   const DESALINHAMENTO: u16 = 13;
-
-   unsafe {
-      if KILOMETRAGEM % DESALINHAMENTO == 0
-         { KILOMETRAGEM += DESALINHAMENTO; }
-
-      // conta cada "tic" da cobrinha no jogo...
-      KILOMETRAGEM += 1;
-      VOLTAS = KILOMETRAGEM / limite_h;
-   }
-}
-
-#[allow(clippy::needless_borrow)]
-pub fn roda_animacao_movimento_continuo<J>(board: &mut J, 
-  snake:&mut Cobrinha) where J: AsMut<Window>
-{
-   let janela = board.as_mut();
-   #[allow(non_snake_case)]
-   let (Y, X) = (
-      janela.get_max_y() as u8,
-      janela.get_max_x() as u8
-   );
-   let dimensao = (Y, X);
-   let timer = Instant::now();
-   const LIMITE: u64 = 49;
-
-   // apresentação ao iniciar o jogo.
-   plota_cobrinha(janela, snake);
-   introducao(janela);
-
-   while timer.elapsed() < Duration::from_secs(LIMITE) {
-      // move a cobrinha.
-      conta_voltas_da_cobrinha(janela.get_max_x() as u16);
-      snake.mover(alterna_direcao());
-      teletransporta_cobrinha(dimensao, snake);
-      plota_cobrinha(janela, &snake);
-      
-      // atualização de frame do jogo.
-      remenda_borda_da_tela(janela);
-      janela.refresh();
-      napms(VELOCIDADE / 3); // um décimo de segundo.
-   }
-}
-

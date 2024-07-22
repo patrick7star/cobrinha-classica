@@ -203,3 +203,18 @@ pub fn colidiu(cobra:&Cobrinha, lin:i32, col:i32) -> bool {
    // intervalo permitido nas duas dimensões.
    else { !((x >= 1 && x <= col-2) && ( y >= 1 && y <= lin-2)) }
 }
+
+pub fn colidiu_com_ela_mesma(cobra: &Cobrinha) -> bool {
+/* Verifica se ela colidiu com seu próprio corpo. O algoritmo para 
+ * detectar tal, consiste em apenas verifica se a posição da cabeça(que
+ * é controlada) ocupa a mesma posição de outro membro do corpo. */
+   for membro in cobra.membros.iter() {
+      let posicao_cabeca = cobra.posicao();
+      let posicao_membro = membro.posicao;
+
+      if posicao_cabeca == posicao_membro
+         { return true; }
+   }
+   // Se não correspondeu com nenhuma parte, então tal colisão não ocorreu.
+   false 
+}
