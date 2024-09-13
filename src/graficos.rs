@@ -348,6 +348,7 @@ pub fn roda_jogo_sem_barreiras<J>(janela: &mut J, obj:&mut Cobrinha,
 
    // enquanto todos alvos/bichos não se forem...
    while !obj_metas.sem_alvos() && !colidiu_com_ela_mesma(obj) {
+      remenda_borda_da_tela(janela);
       // colhendo dados antes do próximo movimento.
       metadados.atualiza(obj, obj_metas);
 

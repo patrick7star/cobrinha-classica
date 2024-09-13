@@ -175,8 +175,10 @@ pub fn encaracola(cobra:&mut Cobrinha) {
 
 #[allow(non_snake_case)]
 fn teletransporta_membro(dimensao: (u8, u8), membro: &mut Seta) {
-   let X_RIGHT = dimensao.1 - 1;
-   let Y_BOTTOM = dimensao.0 - 1;
+   // let X_RIGHT = dimensao.1 - 1;
+   let X_RIGHT = dimensao.1;
+   // let Y_BOTTOM = dimensao.0 - 1;
+   let Y_BOTTOM = dimensao.0;
    const X_LEFT: u8 = 0;
    const Y_TOP: u8 = 0;
    let y = membro.posicao.y;

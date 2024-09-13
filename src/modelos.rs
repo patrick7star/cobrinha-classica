@@ -93,8 +93,7 @@ pub struct Seta {
 
 impl Seta {
    // cria joystick...
-   pub fn cria(dir:Direcao, linha:u8, 
-   coluna:u8, simbolo:char) -> Seta {
+   pub fn cria(dir:Direcao, linha:u8, coluna:u8, simbolo:char) -> Seta {
       // retorna estrutura criada.
       Seta { 
          sentido: dir,
@@ -131,8 +130,8 @@ pub struct Cobrinha {
    pub membros:Vec<Seta>
 }
 
+#[allow(non_snake_case)]
 impl Cobrinha {
-   #[allow(non_snake_case)]
    pub fn cria_personalizado(p: Ponto, dir: Direcao, C: usize, 
      frm: char) -> Self 
    {
@@ -159,9 +158,24 @@ impl Cobrinha {
       Cobrinha { cabeca:guia, membros:corpo}
    }
 
-   /* cria instância da 'Cobrinha', partindo de um dado 'Ponto' */
    pub fn criar(posicao:Ponto) -> Cobrinha 
+   /* Cria instância da 'Cobrinha', partindo de um dado 'Ponto' */
       { Self::cria_personalizado(posicao, Direcao::Norte, 5, '#') }
+
+   pub fn criar_a(pt: Ponto, body: char) -> Cobrinha
+   /* Com apenas uma posição e a forma do corpo, uma cobrinha com um
+    * comprimento de cinco é criada, outros parâmetros são computados 
+    * com definições específicas, ou simplesmente randômicas. */
+      { Self::cria_personalizado(pt, Direcao::Leste, 5, body) }
+
+   pub fn criar_b(pt: Ponto) -> Cobrinha
+   { 
+      let mut snake = Self::criar_a(pt, 'o');
+      // A cabeça será diferente do corpo.
+      snake.cabeca.forma = '#';
+      // Depois de ter alterado somente a cabeça, retorna a instância.
+      snake
+   }
 
    // move toda 'Cobrinha' um passo na 'Direcao' dada.
    pub fn mover(&mut self, novo:Direcao) {
@@ -209,38 +223,43 @@ impl Cobrinha {
    pub fn sentido(&self) -> Direcao { self.cabeca.sentido }
 }
 
+fn adiciona_novo_membro(cobra:&mut Cobrinha) 
+{
+/* Processo de adicionar novo membro. Separando assim, pois fatoração
+ * melhora a legibilidade do código. */
+   // obtendo o último membro da fila no momento.
+   let ultimo_mbr = cobra.membros[cobra.membros.len()-1];
+   // obtendo todas suas propriedades.
+   let dir_ultimo_mbr = ultimo_mbr.sentido;
+   let (l, c) = {
+      /* reposicionando onde será criado baseado no
+       * sentido e posição do ex-último-membro 
+       * até o momento. */
+      match ultimo_mbr.sentido {
+         Direcao::Norte =>
+            (ultimo_mbr.posicao.y+1, ultimo_mbr.posicao.x),
+         Direcao::Sul=>
+            (ultimo_mbr.posicao.y-1, ultimo_mbr.posicao.x),
+         Direcao::Leste=>
+            (ultimo_mbr.posicao.y, ultimo_mbr.posicao.x-1),
+         Direcao::Oeste=>
+            (ultimo_mbr.posicao.y, ultimo_mbr.posicao.x+1),
+      }
+   };
+   /* Pega o símbolo de algum membro da cobrinha, não sendo a cabeça, que 
+    * pode variar dos demais membros de vez em quando. */
+   let simbolo = cobra.membros[1].forma;
+   // criando um novo membro baseado nisso.
+   let novo_mbr = Seta::cria(dir_ultimo_mbr,l, c, simbolo);
+   // no final da fila.
+   cobra.membros.push(novo_mbr);
+}
+
 // adicionando um novo modo de adicionar novo membro.
 impl AddAssign<usize> for Cobrinha {
    // implementando a adição.
-   fn add_assign(&mut self, mut qtd:usize) {
-      /* Processo de adicionar novo membro. Separando assim, pois fatoração
-       * melhora a legibilidade do código. */
-      fn adiciona_novo_membro(cobra:&mut Cobrinha) {
-         // obtendo o último membro da fila no momento.
-         let ultimo_mbr = cobra.membros[cobra.membros.len()-1];
-         // obtendo todas suas propriedades.
-         let dir_ultimo_mbr = ultimo_mbr.sentido;
-         let (l, c) = {
-            /* reposicionando onde será criado baseado no
-             * sentido e posição do ex-último-membro 
-             * até o momento. */
-            match ultimo_mbr.sentido {
-               Direcao::Norte =>
-                  (ultimo_mbr.posicao.y+1, ultimo_mbr.posicao.x),
-               Direcao::Sul=>
-                  (ultimo_mbr.posicao.y-1, ultimo_mbr.posicao.x),
-               Direcao::Leste=>
-                  (ultimo_mbr.posicao.y, ultimo_mbr.posicao.x-1),
-               Direcao::Oeste=>
-                  (ultimo_mbr.posicao.y, ultimo_mbr.posicao.x+1),
-            }
-         };
-         // criando um novo membro baseado nisso.
-         let novo_mbr = Seta::cria(dir_ultimo_mbr,l, c, '#');
-         // no final da fila.
-         cobra.membros.push(novo_mbr);
-      }
-
+   fn add_assign(&mut self, mut qtd: usize) 
+   {
       // executando a adição 'qtd' vezes.
       while qtd > 0 {
          // executa a adição de UM novo membro.
