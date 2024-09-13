@@ -134,7 +134,7 @@ pub fn remenda_borda_da_tela(janela: &mut Window) {
    /* Como a cobrinha se choca e atravessa as barreiras, mesmo quando perde,
     * o desenho representando ela é sobre posto, logo tal função conserta
     * isso apenas redesenhando a borda em cada frame lançado. */
-   janela.border(0, 0, 0, 0, 0, 0, 0, 0 | COLOR_PAIR(14));
+   janela.border(0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 #[cfg(test)]
