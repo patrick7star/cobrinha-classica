@@ -6,4 +6,7 @@ edition = "2018"
 [dependencies]
 pancurses = "0.17.0"
 rand = "0.8.4"
+
+# Apenas funciona na máquina do desenvolvedor.
+[dev-dependencies]
 utilitarios = { path="../rust-utilitarios/" }
