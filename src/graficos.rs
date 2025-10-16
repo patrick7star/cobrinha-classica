@@ -21,51 +21,56 @@ pub use janelas::{remenda_borda_da_tela, Tela};
 
 // desenha na tela os bichinhos a serem devorados.
 fn plota_metas_melhorado(janela: &Window, meta:&Alvos) {
-   // match meta.a_mostrar() {
-   if let Some(ponto) = meta.a_mostrar() {
-      // Some(ponto) => { 
-         janela.mv(ponto.y as i32, ponto.x as i32); 
-         janela.attrset(A_BOLD);
-         janela.attrset(A_BLINK);
-         janela.addch(meta.forma as u32 | COLOR_PAIR(12));
-         janela.attroff(A_BLINK);
-         janela.attrset(A_BOLD);
-      // } None => ()
+   if let Some(ponto) = meta.a_mostrar() 
+   {
+      let cor = COLOR_PAIR(12) as u32;
+      let forma = meta.forma as u32 | cor;
+      let forma = unsafe { char::from_u32_unchecked(forma) };
+      let (y, x): (i32, i32) = (ponto.y as i32, ponto.x as i32);
+
+      janela.attrset(A_BOLD);
+      janela.attrset(A_BLINK);
+      janela.mvaddch(y, x, forma);
+      janela.attroff(A_BLINK);
+      janela.attrset(A_BOLD);
    };
 }
 
 // Desenha na tela a cobrinha.
 #[allow(clippy::identity_op)]
 pub fn plota_cobrinha(janela: &Window, obj:&Cobrinha) {
+   let cabeca_cor = COLOR_PAIR(11) as u32;
+   let corpo_cor = COLOR_PAIR(11) as u32;
+   let cabeca = obj.cabeca.forma as u32 | cabeca_cor;
+   let cabeca = unsafe { char::from_u32_unchecked(cabeca) };
+
    // pinta a cabeça da cobrinha.
    janela.mv( 
       obj.cabeca.posicao.y as i32,
       obj.cabeca.posicao.x as i32
    );
-   janela.addch(obj.cabeca.forma as u32 | COLOR_PAIR(11));
-   // limpa comida, deixa apenas farelo.
+   janela.addch(cabeca);
    janela.mv(
       obj.cabeca.antiga_posicao.y as i32,
       obj.cabeca.antiga_posicao.x as i32
    );
-   janela.addch(' ' as u32);
+   janela.addch(' ');
    // agora com os membros.
    let mut n = 0;
    while n < obj.membros.len() {
+      let member = obj.membros[n].forma as u32 | corpo_cor;
+      let membro = unsafe {char::from_u32_unchecked(member)};
+
       janela.mv( 
          obj.membros[n].posicao.y as i32,
          obj.membros[n].posicao.x as i32
       );
-      janela.addch(
-         (obj.membros[n].forma as u32) | 
-         COLOR_PAIR(11)
-      );
-      // limpa comida, deixa apenas farelo.
+      janela.addch(membro); 
       janela.mv(
          obj.membros[n].antiga_posicao.y as i32,
          obj.membros[n].antiga_posicao.x as i32
       );
-      janela.addch(' ' as u32);
+      janela.addch(' ');
       n += 1;
    }
 
@@ -81,15 +86,19 @@ pub fn plota_cobrinha(janela: &Window, obj:&Cobrinha) {
       // retorna o resultado.
       confirma
    };
+   let cor: u32 = COLOR_PAIR(3) as u32;
    /* pinta a cabeça da cobrinha com uma
     * cor diferente, pois está acima 
     * do corpo. */
    if esta_sobre_corpo {
+      let head = obj.cabeca.forma as u32;
+      let cabeca = unsafe { char::from_u32_unchecked(head | cor) };
+
       janela.mv( 
          obj.cabeca.posicao.y as i32,
          obj.cabeca.posicao.x as i32
       );
-      janela.addch(obj.cabeca.forma as u32 | COLOR_PAIR(3));
+      janela.addch(cabeca);
    }
 }
 
@@ -294,10 +303,7 @@ fn plota_caixa_flutuante(janela: &Window, dados: &Dados) {
       .max().unwrap() as i32
    };
    // posição centralizada.
-   let (y, x) = (
-      (linhas - altura) / 2, 
-      (colunas - largura) / 2
-   );
+   let (y, x) = ((linhas - altura) / 2, (colunas - largura) / 2);
    // pulando linha-em-branco e cabeçalho ...
    let iterador = dados_str.lines().map(|s| s.desacentua()).skip(2);
 

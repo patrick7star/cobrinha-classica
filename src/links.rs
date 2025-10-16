@@ -1,8 +1,9 @@
 /* Cria link simbólico tanto para a versão em debug, quanto para o binário 
  * final. */
+#[cfg(target_os="unix")]
 use std::os::unix::fs::symlink;
 use std::env::current_exe;
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 
 pub fn computa_caminho(caminho_str:&str) -> PathBuf {
 // Complementa link ao executável à partir do caminho do executável ...
@@ -23,6 +24,7 @@ pub fn computa_caminho(caminho_str:&str) -> PathBuf {
    }
 }
 
+#[cfg(target_os="unix")]
 pub fn linka_executaveis(nome: &str) {
    // caminho aos executáveis.
    let caminho_str = "target/release/cobrinha_classica";
@@ -65,6 +67,7 @@ pub fn linka_executaveis(nome: &str) {
    }
 }
 
+#[cfg(target_os="unix")]
 pub fn linca_executaveis_externamente(nome: &str) -> 
   Result<PathBuf, std::io::ErrorKind> 
 {
@@ -102,6 +105,15 @@ pub fn linca_executaveis_externamente(nome: &str) ->
       }
    }
 }
+
+#[cfg(target_os="windows")]
+pub fn linka_executaveis(_nome: &str) 
+   { panic!("{}", std::io::ErrorKind::Unsupported); }
+
+#[cfg(target_os="windows")]
+pub fn linca_executaveis_externamente(_nome: &str) -> 
+  Result<PathBuf, std::io::ErrorKind> 
+   { Err(std::io::ErrorKind::Unsupported) }
 
 #[cfg(test)]
 mod tests {

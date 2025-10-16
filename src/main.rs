@@ -70,6 +70,8 @@ fn main() {
       { println!("ERRO:[{}]", erro); }
 
    // criando links ao executável.
+   #[cfg(target_os="unix")]
    links::linka_executaveis("cobrinha");
+   #[cfg(target_os="unix")]
    links::linca_executaveis_externamente("cobrinha-jogo").unwrap();
 }
