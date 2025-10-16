@@ -5,7 +5,7 @@ use std::os::unix::fs::symlink;
 use std::env::current_exe;
 use std::path::{PathBuf};
 
-pub fn computa_caminho(caminho_str:&str) -> PathBuf {
+/*pub fn computa_caminho(caminho_str:&str) -> PathBuf {
 // Complementa link ao executável à partir do caminho do executável ...
    match current_exe() {
       Ok(mut base) => {
@@ -19,6 +19,28 @@ pub fn computa_caminho(caminho_str:&str) -> PathBuf {
          base.push(caminho_str);
 
          base
+      } Err(_) =>
+         { panic!("não foi possível obter o caminho do executável!"); }
+   }
+} */
+
+use std::path::{Component};
+use std::ffi::{OsStr};
+
+/// Complementa link ao executável à partir do caminho do executável ...
+pub fn computa_caminho(caminho_str: &str) -> PathBuf {
+   const NOME: &'static str = "cobrinha-classica";
+   let barreira = Some(OsStr::new(NOME));
+
+   /* O método novo, busca algo mais flexível. Ele pode capturar o caminho
+    * do projeto baseado em qualquer profundidade dentro dele. */
+   match current_exe() {
+      Ok(mut executavel) => {
+         while executavel.file_name() != barreira {
+            executavel.pop();
+         }
+         executavel.push(caminho_str);
+         executavel
       } Err(_) =>
          { panic!("não foi possível obter o caminho do executável!"); }
    }

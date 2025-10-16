@@ -21,16 +21,15 @@ const BANCO:&str = "data/partidas.dat";
 pub fn salva_no_bd(dados:Vec<u8>) -> Confirmacao {
 /* Salva a string de bytes no disco. */
    let caminho = computa_caminho(BANCO);
-   println!("{}", caminho.display());
-   // abre arquivo para "anexação de dados".
+
+	if cfg!(debug_assertions)
+		{ println!("Caminho de 'partidas.dat': '{}'", caminho.display()); }
+   
    let mut arquivo:File = {
-      OpenOptions::new()
-      .append(true)
-      .create(true)
-      .open(caminho)
-      .unwrap()
+      OpenOptions::new().append(true).create(true)
+      .open(caminho).unwrap()
    };
-   // total de bytes vai primeiro.
+   // Total de bytes vai primeiro.
    let total_de_bytes: u64 = dados.len() as u64;
    let bytes = total_de_bytes.to_be_bytes();
    arquivo.write(&bytes[..]).unwrap();

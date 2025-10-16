@@ -1,6 +1,8 @@
 
 // biblioteca externa:
 extern crate pancurses;
+mod janelas;
+
 use pancurses::{
    Input::{Character, KeyDown, KeyUp, KeyRight, KeyLeft}, 
    Window, napms, COLOR_PAIR, beep, A_BLINK, A_BOLD
@@ -9,7 +11,6 @@ use pancurses::{
 use std::time::Instant;
 use std::convert::TryInto;
 // importando da minha biblioteca:
-mod janelas;
 use crate::{
    Alvos, Cobrinha, Ponto, Direcao, VELOCIDADE, colidiu, Dados, Dilutor,
    introducao, piloto_automatico, string_extensao::StringExtensao,

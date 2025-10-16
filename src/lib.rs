@@ -14,6 +14,7 @@ mod correcoes;
 mod graficos;
 mod string_extensao;
 pub mod links;
+mod serializacao;
 
 // importando todas funções úteis.
 pub use modelos::*;
